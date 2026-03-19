@@ -6,9 +6,9 @@ import os
 FB_FANTASY_PAGE_ID      = os.environ.get("FB_FANTASY_PAGE_ID", "")
 FB_FANTASY_ACCESS_TOKEN = os.environ.get("FB_FANTASY_ACCESS_TOKEN", "")
 
-# Facebook — صفحة الأخبار
-FB_NEWS_PAGE_ID         = os.environ.get("FB_NEWS_PAGE_ID", "")
-FB_NEWS_ACCESS_TOKEN    = os.environ.get("FB_NEWS_ACCESS_TOKEN", "")
+# Facebook — صفحة الكورة
+FB_NEWS_PAGE_ID         = os.environ.get("FB_KORA_PAGE_ID", "")
+FB_NEWS_ACCESS_TOKEN    = os.environ.get("FB_KORA_ACCESS_TOKEN", "")
 
 # ══════════════════════════════════════════
 # Telegram
