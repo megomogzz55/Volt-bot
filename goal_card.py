@@ -155,7 +155,11 @@ def to_muse_style(image_bytes):
             from google.genai import types
 
             print("🤖 بنجرب Gemini...")
-            client = genai.Client(api_key=GEMINI_API_KEY)
+            # v1alpha مطلوب لـ image generation
+            client = genai.Client(
+                api_key=GEMINI_API_KEY,
+                http_options=types.HttpOptions(api_version='v1alpha')
+            )
 
             prompt = """Convert this football player photo into a Muse State flat cartoon illustration.
 Flat vector art, bold black outlines (4px), solid flat colors only,
@@ -170,7 +174,7 @@ Same jersey colors as in the photo. High quality sharp edges."""
             )
 
             response = client.models.generate_content(
-                model="gemini-2.5-flash-image-preview",
+                model="gemini-2.5-flash-image",
                 contents=[image_part, prompt],
                 config=types.GenerateContentConfig(
                     response_modalities=["IMAGE"]
