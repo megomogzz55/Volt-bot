@@ -126,10 +126,10 @@ def to_muse_style(image_bytes):
             prompt = "Convert this football player photo into a Muse State flat cartoon illustration. Flat vector art, bold black outlines, solid flat colors only, zero gradients, clean minimal cartoon face recognizable but simplified, white background, upper body portrait centered, same jersey colors"
 
             params = {
-                "model": "nanobanana",
+                "model": "flux",
                 "image": image_url,
-                "width": 1024,
-                "height": 1024,
+                "width": 512,
+                "height": 512,
                 "nologo": "true",
                 "seed": 42
             }
@@ -170,7 +170,7 @@ Same jersey colors as in the photo. High quality sharp edges."""
             )
 
             response = client.models.generate_content(
-                model="gemini-2.5-flash-image",
+                model="gemini-2.0-flash-preview-image-generation",
                 contents=[image_part, prompt],
                 config=types.GenerateContentConfig(
                     response_modalities=["IMAGE"]
