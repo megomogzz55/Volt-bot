@@ -112,24 +112,24 @@ def to_muse_style(image_bytes):
     """
 
     # ══════════════════════════════════════════
-    # الحل 1 — Pollinations nanobanana
+    # الحل 1 — Pollinations flux
     # ══════════════════════════════════════════
     try:
         from urllib.parse import quote
 
-        print("🎨 بنرفع الصورة على 0x0.st...")
+        print("🎨 بنرفع الصورة على catbox...")
         image_url = upload_image_temp(image_bytes)
 
         if image_url:
-            print("🎨 بنجرب Pollinations nanobanana...")
+            print("🎨 بنجرب Pollinations flux...")
 
             prompt = "Convert this football player photo into a Muse State flat cartoon illustration. Flat vector art, bold black outlines, solid flat colors only, zero gradients, clean minimal cartoon face recognizable but simplified, white background, upper body portrait centered, same jersey colors"
 
             params = {
-                "model": "nanobanana",
+                "model": "flux",
                 "image": image_url,
-                "width": 1024,
-                "height": 1024,
+                "width": 512,
+                "height": 512,
                 "nologo": "true",
                 "seed": 42
             }
