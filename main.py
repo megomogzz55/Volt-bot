@@ -22,6 +22,7 @@ from image_generator import (
     price_card, captain_card,
     injury_card, transfers_card
 )
+from goal_card import create_goal_card
 
 # ══════════════════════════════════════════
 # State — نتذكر إيه اللي نشرناه قبل كده
