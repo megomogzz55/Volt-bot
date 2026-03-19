@@ -216,10 +216,6 @@ def run_post_fixtures(data, state):
 def main():
     print(f"🤖 Fantasy Bot بيشتغل — {datetime.datetime.utcnow()}")
 
-    # 🧪 تجربة كارت الهدف — امسح السطر ده بعد الاختبار
-    test_goal_card()
-    return
-
     print("📡 بنجيب بيانات FPL...")
     data = get_bootstrap()
     if not data:
