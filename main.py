@@ -18,10 +18,13 @@ from content_writer import (
     injury_text, fixtures_text
 )
 from publisher import post_fantasy, post_news
+from image_generator import (
+    price_card, captain_card,
+    injury_card, transfers_card
+)
 
 # ══════════════════════════════════════════
 # State — نتذكر إيه اللي نشرناه قبل كده
-# (بنحفظه في ملف JSON مؤقت)
 # ══════════════════════════════════════════
 STATE_FILE = "state.json"
 
@@ -43,39 +46,29 @@ def save_state(state):
     json.dump(state, open(STATE_FILE, "w"), ensure_ascii=False, indent=2)
 
 # ══════════════════════════════════════════
-# الجدول الزمني — إيه ينشر امتى
+# الجدول الزمني
 # ══════════════════════════════════════════
 def get_schedule():
-    """
-    بيرجع قايمة بالمهام المفروض تتنفذ دلوقتي
-    بناءً على الوقت الحالي (UTC)
-    """
     now = datetime.datetime.utcnow()
     hour = now.hour
     minute = now.minute
-    weekday = now.weekday()  # 0=Monday, 4=Friday
+    weekday = now.weekday()
 
     tasks = []
+    tasks.append("check_prices")
+    tasks.append("check_injuries")
 
-    # ── كل وقت (كل ما يشتغل) ──
-    tasks.append("check_prices")       # تغييرات الأسعار
-    tasks.append("check_injuries")     # إصابات جديدة
-
-    # ── صبح (8-9 UTC = 10-11 Cairo) ──
     if hour == 8 and minute < 10:
-        tasks.append("post_price_summary")   # ملخص الأسعار
+        tasks.append("post_price_summary")
 
-    # ── ضهر (12 UTC = 2 Cairo) ──
     if hour == 12 and minute < 10:
-        tasks.append("post_top_transfers")   # أكتر لاعبين اتشتروا
+        tasks.append("post_top_transfers")
 
-    # ── عصر (15 UTC = 5 Cairo) ──
     if hour == 15 and minute < 10:
-        tasks.append("post_captain")         # توصية الكابتن
+        tasks.append("post_captain")
 
-    # ── الجمعة (قبل الـ Deadline) ──
     if weekday == 4 and hour == 10 and minute < 10:
-        tasks.append("post_fixtures")        # جدول الجولة + تحذير deadline
+        tasks.append("post_fixtures")
 
     return tasks
 
@@ -84,7 +77,7 @@ def get_schedule():
 # ══════════════════════════════════════════
 
 def run_check_prices(data, state):
-    """راقب تغييرات الأسعار وانشر الجديد"""
+    """راقب تغييرات الأسعار وانشر بكارت"""
     changes = get_price_changes(data)
     posted = 0
 
@@ -93,22 +86,27 @@ def run_check_prices(data, state):
         if player_key in state["posted_price_changes"]:
             continue
 
-        # اكتب المحتوى
+        # اكتب المحتوى النصي
         if c["change"] > 0:
             text = price_rise_text(c["name"], c["old_price"], c["new_price"])
         else:
             text = price_fall_text(c["name"], c["old_price"], c["new_price"])
 
-        # انشر على صفحة الفانتازي
-        result = post_fantasy(text)
+        # ولّد الكارت
+        try:
+            img_path = price_card(c["name"], c["old_price"], c["new_price"])
+        except Exception as e:
+            print(f"⚠️ فشل توليد الصورة: {e}")
+            img_path = None
+
+        # انشر بصورة أو بدونها
+        result = post_fantasy(text, img_path)
         if result:
             state["posted_price_changes"].append(player_key)
-            # احتفظ بآخر 50 بس عشان الملف ما يكبرش
             state["posted_price_changes"] = state["posted_price_changes"][-50:]
             posted += 1
             print(f"✅ نشرنا تغيير سعر: {c['name']}")
 
-        # متنشرش أكتر من 3 تغييرات في المرة الواحدة
         if posted >= 3:
             break
 
@@ -116,11 +114,10 @@ def run_check_prices(data, state):
 
 
 def run_check_injuries(data, state):
-    """راقب الإصابات وانشر الجديد"""
+    """راقب الإصابات وانشر بكارت"""
     injured = get_injured_players(data)
 
     for p in injured:
-        # انشر بس اللاعبين الكبار (ownership > 15%)
         if float(p["ownership"]) < 15:
             continue
 
@@ -129,18 +126,26 @@ def run_check_injuries(data, state):
             continue
 
         text = injury_text(p)
-        result = post_fantasy(text)
+
+        # ولّد كارت الإصابة
+        try:
+            img_path = injury_card(p["name"], p["chance"], p["news"])
+        except Exception as e:
+            print(f"⚠️ فشل توليد صورة الإصابة: {e}")
+            img_path = None
+
+        result = post_fantasy(text, img_path)
         if result:
             state["posted_injuries"].append(player_key)
             state["posted_injuries"] = state["posted_injuries"][-30:]
             print(f"✅ نشرنا إصابة: {p['name']}")
-            break  # إصابة واحدة في المرة
+            break
 
     return state
 
 
 def run_post_captain(data, state):
-    """انشر توصية الكابتن"""
+    """انشر توصية الكابتن بكارت"""
     today = datetime.date.today().isoformat()
     if state.get("last_captain_post") == today:
         print("⏭️ الكابتن اتنشر النهارده")
@@ -151,7 +156,22 @@ def run_post_captain(data, state):
         return state
 
     text = captain_text(players)
-    result = post_fantasy(text)
+    top = players[0]
+
+    # ولّد كارت الكابتن
+    try:
+        img_path = captain_card(
+            top["name"],
+            top["price"],
+            top["form"],
+            top["ownership"],
+            top.get("fixture", "جولة قادمة")
+        )
+    except Exception as e:
+        print(f"⚠️ فشل توليد كارت الكابتن: {e}")
+        img_path = None
+
+    result = post_fantasy(text, img_path)
     if result:
         state["last_captain_post"] = today
         print("✅ نشرنا توصية الكابتن")
@@ -159,7 +179,7 @@ def run_post_captain(data, state):
 
 
 def run_post_top_transfers(data, state):
-    """انشر أكتر التحويلات"""
+    """انشر أكتر التحويلات بكارت"""
     today = datetime.date.today().isoformat()
     if state.get("last_transfers_post") == today:
         print("⏭️ التحويلات اتنشرت النهارده")
@@ -170,7 +190,15 @@ def run_post_top_transfers(data, state):
         return state
 
     text = top_transfers_text(bought, sold)
-    result = post_fantasy(text)
+
+    # ولّد كارت التحويلات
+    try:
+        img_path = transfers_card(bought, sold)
+    except Exception as e:
+        print(f"⚠️ فشل توليد كارت التحويلات: {e}")
+        img_path = None
+
+    result = post_fantasy(text, img_path)
     if result:
         state["last_transfers_post"] = today
         print("✅ نشرنا التحويلات")
@@ -205,7 +233,6 @@ def run_post_fixtures(data, state):
 def main():
     print(f"🤖 Fantasy Bot بيشتغل — {datetime.datetime.utcnow()}")
 
-    # جيب بيانات FPL مرة واحدة
     print("📡 بنجيب بيانات FPL...")
     data = get_bootstrap()
     if not data:
@@ -215,35 +242,25 @@ def main():
     gw = get_current_gameweek(data)
     print(f"⚽ الجولة الحالية: {gw}")
 
-    # حمّل الـ State
     state = load_state()
-
-    # شوف المهام المطلوبة دلوقتي
     tasks = get_schedule()
     print(f"📋 المهام: {tasks}")
 
-    # نفّذ كل مهمة
     for task in tasks:
         try:
             if task == "check_prices":
                 state = run_check_prices(data, state)
-
             elif task == "check_injuries":
                 state = run_check_injuries(data, state)
-
             elif task == "post_captain":
                 state = run_post_captain(data, state)
-
             elif task == "post_top_transfers":
                 state = run_post_top_transfers(data, state)
-
             elif task == "post_fixtures":
                 state = run_post_fixtures(data, state)
-
         except Exception as e:
             print(f"❌ خطأ في {task}: {e}")
 
-    # احفظ الـ State
     save_state(state)
     print("✅ خلص — هنشتغل تاني بعد شوية")
 
