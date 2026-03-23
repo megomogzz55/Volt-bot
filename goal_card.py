@@ -132,9 +132,22 @@ def to_muse_style(image_bytes, team: str = "football"):
                 json={"prompt": prompt},
                 timeout=60
             )
-            if r.status_code == 200 and len(r.content) > 5000:
-                print(f"✅ Cloudflare نجح! ({len(r.content)} bytes)")
-                return r.content
+            if r.status_code == 200:
+                import base64
+                # Cloudflare بيرجع JSON مع base64
+                try:
+                    data = r.json()
+                    img_b64 = data.get("result", {}).get("image", "")
+                    if img_b64:
+                        img_bytes = base64.b64decode(img_b64)
+                        print(f"✅ Cloudflare نجح! ({len(img_bytes)} bytes)")
+                        return img_bytes
+                except Exception:
+                    pass
+                # fallback — raw bytes
+                if len(r.content) > 5000:
+                    print(f"✅ Cloudflare نجح raw! ({len(r.content)} bytes)")
+                    return r.content
             print(f"⚠️ Cloudflare رجع {r.status_code} ({len(r.content)} bytes)")
         except Exception as e:
             print(f"⚠️ Cloudflare فشل: {e}")
@@ -300,6 +313,19 @@ def create_goal_card(player_code, scorer_name, assist_name,
 
     # 3. أضف اللوجو
     final_bytes = add_logo(final_bytes)
+
+    # ✅ تأكد إن الصورة JPEG صح قبل النشر
+    if not final_bytes[:3] == b'\xff\xd8\xff':
+        print("⚠️ الصورة مش JPEG — بنحول...")
+        try:
+            img = Image.open(io.BytesIO(final_bytes)).convert("RGB")
+            out = io.BytesIO()
+            img.save(out, format="JPEG", quality=90)
+            final_bytes = out.getvalue()
+            print("✅ اتحولت لـ JPEG")
+        except Exception as e:
+            print(f"⚠️ فشل التحويل: {e} — بنستخدم الصورة الحقيقية")
+            final_bytes = image_bytes
 
     # 4. احفظ
     path = f"/tmp/goal_{scorer_name.replace(' ', '_')}.jpg"
