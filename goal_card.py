@@ -224,7 +224,8 @@ Same jersey colors as in the photo. High quality sharp edges."""
 # ══════════════════════════════════════════
 def add_logo(image_bytes, logo_size=120):
     try:
-        img = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+        # ✅ فتح الصورة من bytes
+        img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         img = img.resize((1080, 1080), Image.LANCZOS)
 
         if LOGO_PATH.exists():
@@ -232,17 +233,28 @@ def add_logo(image_bytes, logo_size=120):
             logo = logo.resize((logo_size, logo_size), Image.LANCZOS)
             x = img.width - logo_size - 20
             y = img.height - logo_size - 20
-            img.paste(logo, (x, y), mask=logo)
+            # ✅ paste على RGB مع mask
+            img.paste(logo, (x, y), mask=logo.split()[3])
         else:
             print("⚠️ logo.png مش موجود في الريبو")
 
         output = io.BytesIO()
-        img.convert("RGB").save(output, "JPEG", quality=95)
-        return output.getvalue()
+        # ✅ JPEG صريح — فيسبوك بيقبله
+        img.save(output, format="JPEG", quality=92)
+        result = output.getvalue()
+        print(f"✅ اللوجو اتضاف ({len(result)} bytes)")
+        return result
 
     except Exception as e:
         print(f"❌ خطأ في إضافة اللوجو: {e}")
-        return image_bytes
+        # fallback — احفظ الصورة كـ JPEG بدون لوجو
+        try:
+            img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+            output = io.BytesIO()
+            img.save(output, format="JPEG", quality=92)
+            return output.getvalue()
+        except:
+            return image_bytes
 
 # ══════════════════════════════════════════
 # 4. Caption
