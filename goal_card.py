@@ -12,7 +12,9 @@ import requests
 from PIL import Image, ImageDraw
 from pathlib import Path
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_API_KEY  = os.environ.get("GEMINI_API_KEY", "")
+CF_ACCOUNT_ID   = os.environ.get("CF_ACCOUNT_ID", "")
+CF_API_TOKEN    = os.environ.get("CF_API_TOKEN", "")
 BASE_DIR  = Path(__file__).parent
 LOGO_PATH = BASE_DIR / "logo.png"
 
@@ -103,16 +105,42 @@ def upload_image_temp(image_bytes):
     return None
 
 
-def to_muse_style(image_bytes):
+def to_muse_style(image_bytes, team: str = "football"):
     """
     بيحوّل صورة اللاعب لكارتون Muse Style
     الترتيب:
-    1. Pollinations nanobanana (مجاني — reference image)
-    2. Gemini (لو عنده quota)
+    1. Cloudflare FLUX (مجاني ♾️) ← الأول
+    2. Pollinations flux (fallback)
+    3. Gemini (لو عنده quota)
     """
 
     # ══════════════════════════════════════════
-    # الحل 1 — Pollinations flux
+    # الحل 1 — Cloudflare FLUX (الأسرع والمجاني)
+    # ══════════════════════════════════════════
+    if CF_ACCOUNT_ID and CF_API_TOKEN:
+        try:
+            prompt = (
+                f"flat vector cartoon portrait of a {team} football player, "
+                "bold black outlines, solid flat colors, white background, "
+                "Muse State style, upper body portrait, FIFA card illustration, "
+                "minimal shading, clean lines, professional avatar"
+            )
+            print("🎨 بنجرب Cloudflare FLUX...")
+            r = requests.post(
+                f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/ai/run/@cf/black-forest-labs/flux-1-schnell",
+                headers={"Authorization": f"Bearer {CF_API_TOKEN}"},
+                json={"prompt": prompt},
+                timeout=60
+            )
+            if r.status_code == 200 and len(r.content) > 5000:
+                print(f"✅ Cloudflare نجح! ({len(r.content)} bytes)")
+                return r.content
+            print(f"⚠️ Cloudflare رجع {r.status_code} ({len(r.content)} bytes)")
+        except Exception as e:
+            print(f"⚠️ Cloudflare فشل: {e}")
+
+    # ══════════════════════════════════════════
+    # الحل 2 — Pollinations flux
     # ══════════════════════════════════════════
     try:
         from urllib.parse import quote
@@ -147,7 +175,7 @@ def to_muse_style(image_bytes):
         print(f"⚠️ Pollinations فشل: {e}")
 
     # ══════════════════════════════════════════
-    # الحل 2 — Gemini (لو عنده quota)
+    # الحل 3 — Gemini (لو عنده quota)
     # ══════════════════════════════════════════
     if GEMINI_API_KEY:
         try:
@@ -155,7 +183,6 @@ def to_muse_style(image_bytes):
             from google.genai import types
 
             print("🤖 بنجرب Gemini...")
-            # v1alpha مطلوب لـ image generation
             client = genai.Client(
                 api_key=GEMINI_API_KEY,
                 http_options=types.HttpOptions(api_version='v1alpha')
