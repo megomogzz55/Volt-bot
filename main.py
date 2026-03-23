@@ -216,6 +216,12 @@ def run_post_fixtures(data, state):
 def main():
     print(f"🤖 Fantasy Bot بيشتغل — {datetime.datetime.utcnow()}")
 
+    # 🧪 TEST_MODE — شغّله يدوياً من GitHub Actions بـ TEST_MODE=true
+    if os.environ.get("TEST_MODE") == "true":
+        print("🧪 TEST MODE — بنجرب كارت الهدف...")
+        test_goal_card()
+        return
+
     print("📡 بنجيب بيانات FPL...")
     data = get_bootstrap()
     if not data:
