@@ -148,7 +148,7 @@ def cmd_photo_news(publish=False, count=1):
         return
         
     for i, story in enumerate(stories, 1):
-        caption = engine.format_bein_style_caption(story)
+        caption = engine.format_filgoal_style_caption(story)
         fname = f"story_{i}_{hash(story['title']) % 10000}.jpg"
         img_path = download_image(story["img_url"], fname)
         
@@ -196,38 +196,65 @@ def cmd_post_news(publish=False, count=1):
             posted_count += 1
             print("(Dry-run: not published. Add --publish to post live)")
 
-def cmd_fpl_debate(publish=False):
-    debates = [
-        (
-            "⚡ حيرة الكابتنة في الجولة القادمة | فانتازي ڤولت\n\n"
-            "لو التشكيلة بتاعتك فيها:\n"
-            "👑 محمد صلاح (ماتش قوي على ملعبه)\n"
-            "🤖 إيرلينج هالاند (مواجهة صعبة خارج الأرض)\n"
-            "🪄 كول بالمر (فورمة استثنائية)\n\n"
-            "الكابتن المضمون في رأيك مين؟ والريسك مع مين؟ 🤔👇\n\n"
-            "#فانتازي_الدوري_الانجليزي #FPL #FantasyVolt #صلاح #هالاند"
-        ),
-        (
-            "🔥 سؤال الموسم للمدربين | فانتازي ڤولت\n\n"
-            "معاك كاش 10.5 مليون.. ومحتاج لاعب وسط سوبر يفرق في الترتيب:\n"
-            "1️⃣ كول بالمر (تشيلسي)\n"
-            "2️⃣ بوكايو ساكا (أرسنال)\n\n"
-            "هتختار مين فيهم بدون تردد وليه؟ شاركنا اختيارك! 👇\n\n"
-            "#فانتازي_الدوري_الانجليزي #FPL #FantasyVolt"
-        ),
-        (
-            "📊 الخيارات التفاضلية (Differentials) | فانتازي ڤولت\n\n"
-            "أفضل 3 لاعبين بنسبة ملكية أقل من 10% قادرين يفجروا الترتيب في الجولات القادمة:\n\n"
-            "🎯 إيزي (كريستال بالاس) - جدول مباريات مميز\n"
-            "🎯 كولوسيفسكي (توتنهام) - صانع الفرص الأول للفريق\n"
-            "🎯 مورجان روجرز (أستون فيلا) - سعر اقتصادي وأساسي دائم\n\n"
-            "مين فيهم عينك عليه في تشكيلتك؟ شاركنا في الكومنتات! 👇\n\n"
-            "#فانتازي_الدوري_الانجليزي #FPL #FantasyVolt"
+def cmd_fpl_debate(publish=False, mode="debate"):
+    boot = FPLEngine().fetch_bootstrap()
+    curr_gw = next((e for e in boot.get("events", []) if e.get("is_current")), None)
+    gw_name = curr_gw.get("name", "الجولة") if curr_gw else "الجولة القادمة"
+    
+    if mode == "closed":
+        post_txt = (
+            f"🚨 قفلت خلاص.. الديدلاين أغلق رسميًا لـ {gw_name}! 🔒\n\n"
+            f"أهم قرار أخدته في التشكيلة إيه؟ 🤔\n"
+            f"👑 الكابتن مع مين؟\n"
+            f"🔄 عملت كام تبديل وسالب كام؟\n"
+            f"🃏 فعلت أي خاصية في الجولة دي؟\n\n"
+            f"شاركنا تشكيلتك وكابتنك في الكومنتات.. وبالتوفيق لكل المدربين! ⚡\n\n"
+            f"#فانتازي_الدوري_الانجليزي #FPL #FantasyVolt"
         )
-    ]
-    import random
-    post_txt = random.choice(debates)
-    print("\n--- [FPL DEBATE POST] ---")
+    elif mode == "warning":
+        post_txt = (
+            f"⏳ تنبيه الفرصة الأخيرة | {gw_name} ⚡\n\n"
+            f"باقي ساعة واحدة فقط على إغلاق الديدلاين!\n\n"
+            f"تأكد من:\n"
+            f"✅ تفعيل الكابتن وتحديد نائب الكابتن (Vice Captain)\n"
+            f"✅ ترتيب دكة البدلاء بعناية\n"
+            f"✅ مراجعة آخر تقارير الإصابات\n\n"
+            f"مين اللاعب اللي لسه محتار تبيعه ولا تخليه؟ 👇\n\n"
+            f"#فانتازي_الدوري_الانجليزي #FPL #FantasyVolt"
+        )
+    else:
+        debates = [
+            (
+                f"⚡ حيرة الكابتنة في {gw_name} | فانتازي ڤولت\n\n"
+                f"لو التشكيلة بتاعتك فيها:\n"
+                f"👑 محمد صلاح (ماتش قوي على ملعبه)\n"
+                f"🤖 إيرلينج هالاند (مواجهة صعبة خارج الأرض)\n"
+                f"🪄 كول بالمر (فورمة استثنائية)\n\n"
+                f"الكابتن المضمون في رأيك مين؟ والريسك مع مين؟ 🤔👇\n\n"
+                f"#فانتازي_الدوري_الانجليزي #FPL #FantasyVolt #صلاح #هالاند"
+            ),
+            (
+                f"🔥 سؤال الموسم للمدربين | فانتازي ڤولت\n\n"
+                f"معاك كاش 10.5 مليون.. ومحتاج لاعب وسط سوبر يفرق في الترتيب:\n"
+                f"1️⃣ كول بالمر (تشيلسي)\n"
+                f"2️⃣ بوكايو ساكا (أرسنال)\n\n"
+                f"هتختار مين فيهم بدون تردد وليه؟ شاركنا اختيارك! 👇\n\n"
+                f"#فانتازي_الدوري_الانجليزي #FPL #FantasyVolt"
+            ),
+            (
+                f"📊 الخيارات التفاضلية (Differentials) | فانتازي ڤولت\n\n"
+                f"أفضل 3 لاعبين بنسبة ملكية أقل من 10% قادرين يفجروا الترتيب في الجولات القادمة:\n\n"
+                f"🎯 إيزي (كريستال بالاس) - جدول مباريات مميز\n"
+                f"🎯 كولوسيفسكي (توتنهام) - صانع الفرص الأول للفريق\n"
+                f"🎯 مورجان روجرز (أستون فيلا) - سعر اقتصادي وأساسي دائم\n\n"
+                f"مين فيهم عينك عليه في تشكيلتك؟ شاركنا في الكومنتات! 👇\n\n"
+                f"#فانتازي_الدوري_الانجليزي #FPL #FantasyVolt"
+            )
+        ]
+        import random
+        post_txt = random.choice(debates)
+
+    print("\n--- [BEIN FANTASY STYLE POST] ---")
     print(post_txt)
     
     if publish:
@@ -257,6 +284,7 @@ def main():
     
     p_fpl = subparsers.add_parser("fpl-debate", help="Post an engaging FPL debate/discussion")
     p_fpl.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
+    p_fpl.add_argument("--mode", choices=["debate", "warning", "closed"], default="debate", help="Type of FPL post")
     
     p_morn = subparsers.add_parser("morning", help="Generate today's fixtures card & publish")
     p_morn.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
@@ -276,7 +304,7 @@ def main():
     elif args.command == "photo-news":
         cmd_photo_news(publish=args.publish, count=args.count)
     elif args.command == "fpl-debate":
-        cmd_fpl_debate(publish=args.publish)
+        cmd_fpl_debate(publish=args.publish, mode=getattr(args, "mode", "debate"))
     else:
         parser.print_help()
 

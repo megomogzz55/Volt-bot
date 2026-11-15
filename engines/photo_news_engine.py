@@ -216,21 +216,26 @@ class PhotoNewsEngine:
 
         return results
 
-    def format_bein_style_caption(self, story):
+    def format_filgoal_style_caption(self, story):
         """
-        Format clean, natural, punchy caption without ANY competitor names
+        Format news in the authoritative style of FilGoal, Yallakora, WinWin, and beIN Sports:
+        - Sharp category badge (رسميًا, تصريحات, ميركاتو, رقم قياسي)
+        - Clean headline without ANY competitor names
+        - Proper sports media hashtags
         """
         title = story["title"]
 
-        # Check if title has quotes
-        if ":" in title or "：" in title:
-            prefix = "🎙️ "
-        elif "رسمي" in title:
-            prefix = "🚨 رسمياً | "
-        elif "صفقة" in title or "ميركاتو" in title or "انتقال" in title:
-            prefix = "🔥 صفقة مدوية | "
+        # Category detection
+        if any(w in title for w in ["قال", "صرح", "يؤكد", ":", "："]):
+            badge = "🎙️ تصريحات | "
+        elif any(w in title for w in ["رسميًا", "رسميا", "أعلن", "حسم", "عاجل"]):
+            badge = "🚨 رسميًا | "
+        elif any(w in title for w in ["ميركاتو", "صفقة", "ضم", "تعاقد", "انتقال", "يفاوض"]):
+            badge = "🔥 ميركاتو | "
+        elif any(w in title for w in ["رقم", "تاريخي", "أكثر", "إحصائية", "أول لاعب"]):
+            badge = "📊 رقم قياسي | "
         else:
-            prefix = "⚡ "
+            badge = "⚡ "
 
-        caption = f"{prefix}{title}!\n\n#كورة_ڤولت #كرة_القدم"
+        caption = f"{badge}{title}\n\n#كورة_ڤولت #كرة_القدم"
         return caption
