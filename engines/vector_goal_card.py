@@ -18,27 +18,32 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Map player name keywords to vector portrait files
 VECTOR_MAPPING = {
+    "مبابي": "mbappe_transparent.png",
+    "mbappe": "mbappe_transparent.png",
     "صلاح": "salah_pop.jpg",
-    "محمد صلاح": "salah_pop.jpg",
+    "salah": "salah_pop.jpg",
     "ماينو": "mainoo.jpg",
-    "كوبي ماينو": "mainoo.jpg",
+    "mainoo": "mainoo.jpg",
     "جارناتشو": "garnacho.jpg",
+    "garnacho": "garnacho.jpg",
     "برونو": "bruno.jpg",
-    "برونو فيرنانديز": "bruno.jpg",
+    "bruno": "bruno.jpg",
     "كين": "kane.jpg",
-    "هاري كين": "kane.jpg",
+    "kane": "kane.jpg",
     "نيلسون": "nelson.jpg",
-    "ريس نيلسون": "nelson.jpg"
+    "nelson": "nelson.jpg"
 }
 
 def get_vector_image_path(player_name):
+    clean = str(player_name).lower()
     for k, fname in VECTOR_MAPPING.items():
-        if k in player_name:
+        if k in clean:
             p = os.path.join(VECTORS_DIR, fname)
             if os.path.exists(p):
                 return p
-    # Default fallback to salah_pop
+    # Default fallback
     return os.path.join(VECTORS_DIR, "salah_pop.jpg")
+
 
 def render_vector_goal_card(scorer, assister="بدون صناعة", team="البريميرليج", minute=34, stats="هدف حاسم", output_path=None):
     vector_img = get_vector_image_path(scorer)
