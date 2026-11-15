@@ -19,6 +19,7 @@ from render.card_engine import (
 from engines.fpl_engine import FPLEngine
 from engines.live_score_engine import LiveScoreEngine
 from engines.news_engine import NewsEngine
+from engines.photo_news_engine import PhotoNewsEngine, download_image
 
 def cmd_status():
     print("=" * 60)
@@ -139,6 +140,34 @@ def cmd_morning_fixtures(publish=False):
         print("\nGenerated Caption (preview):\n", caption)
         print("\nRun with --publish to publish live to Facebook.")
 
+def cmd_photo_news(publish=False, count=1):
+    engine = PhotoNewsEngine()
+    stories = engine.fetch_top_stories_with_photos(limit=count)
+    if not stories:
+        print("No fresh photo stories found.")
+        return
+        
+    for i, story in enumerate(stories, 1):
+        caption = engine.format_bein_style_caption(story)
+        fname = f"story_{i}_{hash(story['title']) % 10000}.jpg"
+        img_path = download_image(story["img_url"], fname)
+        
+        print(f"\n--- [PHOTO NEWS #{i}] ---")
+        print("Entity:", story["entity_ar"], f"({story['entity_en']})")
+        print("Image:", img_path)
+        print("Caption:\n", caption)
+        
+        if publish and img_path:
+            print("Publishing photo post to Kora Volt page...")
+            try:
+                res = post_photo(img_path, caption=caption, page_key="kora_volt")
+                print("PUBLISHED SUCCESSFULLY! Post ID:", res.get("id"))
+                engine.mark_posted(story["title"])
+            except Exception as e:
+                print("Publish Error:", e)
+        else:
+            print("(Dry-run: not published. Add --publish to post live)")
+
 def cmd_post_news(publish=False, count=1):
     engine = NewsEngine()
     news = engine.fetch_news_stream(limit=count * 3)
@@ -222,6 +251,10 @@ def main():
     p_news.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
     p_news.add_argument("--count", type=int, default=1, help="Number of distinct news articles to post")
     
+    p_pnews = subparsers.add_parser("photo-news", help="Fetch sports news WITH high-res photos (beIN style)")
+    p_pnews.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
+    p_pnews.add_argument("--count", type=int, default=1, help="Number of photo news posts")
+    
     p_fpl = subparsers.add_parser("fpl-debate", help="Post an engaging FPL debate/discussion")
     p_fpl.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
     
@@ -240,6 +273,8 @@ def main():
         cmd_morning_fixtures(publish=args.publish)
     elif args.command == "news":
         cmd_post_news(publish=args.publish, count=args.count)
+    elif args.command == "photo-news":
+        cmd_photo_news(publish=args.publish, count=args.count)
     elif args.command == "fpl-debate":
         cmd_fpl_debate(publish=args.publish)
     else:
