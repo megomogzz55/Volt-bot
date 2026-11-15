@@ -1,13 +1,26 @@
-name: Fantasy Volt - Daily Discussions & Debates
+name: Fantasy Volt - Frequent Content Stream
 
 on:
   schedule:
-    # 12:00 UTC (02:00 PM Cairo) and 18:00 UTC (08:00 PM Cairo)
-    - cron: '0 12,18 * * *'
+    # 10:00, 14:00, 18:00, 21:00 UTC (12:00 PM, 04:00 PM, 08:00 PM, 11:00 PM Cairo)
+    - cron: '0 10,14,18,21 * * *'
   workflow_dispatch:
+    inputs:
+      type:
+        description: 'Post Type'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - 'auto'
+          - 'quiz'
+          - 'facts'
+          - 'picks'
+          - 'differentials'
+          - 'price-alert'
 
 jobs:
-  publish_fpl_debate:
+  publish_fantasy_content:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -23,9 +36,15 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Publish FPL Debate / Tip
+      - name: Publish Varied Fantasy Content with Real Photos
         env:
           FB_FANTASY_PAGE_ID: ${{ secrets.FB_FANTASY_PAGE_ID || secrets.FV_PAGE_ID }}
           FB_FANTASY_ACCESS_TOKEN: ${{ secrets.FB_FANTASY_ACCESS_TOKEN || secrets.FV_ACCESS_TOKEN }}
         run: |
-          python bot.py fpl-debate --publish
+          python -c "
+          import random, subprocess
+          choices = ['fpl-quiz', 'fpl-facts', 'fpl-picks', 'fpl-differentials', 'fpl-price-alert']
+          cmd = random.choice(choices)
+          print('Selected Auto Command:', cmd)
+          subprocess.run(['python', 'bot.py', cmd, '--publish'], check=True)
+          "

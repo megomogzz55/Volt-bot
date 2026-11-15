@@ -19,7 +19,8 @@ from render.card_engine import (
 from engines.fpl_engine import FPLEngine
 from engines.live_score_engine import LiveScoreEngine
 from engines.news_engine import NewsEngine
-from engines.photo_news_engine import PhotoNewsEngine, download_image
+from engines.photo_news_engine import PhotoNewsEngine, download_image, fetch_entity_photo
+from engines.fantasy_content_engine import FantasyContentEngine
 
 def cmd_status():
     print("=" * 60)
@@ -264,6 +265,122 @@ def cmd_fpl_debate(publish=False, mode="debate"):
     else:
         print("\n(Dry-run: not published. Add --publish to post live)")
 
+
+def cmd_fpl_quiz(publish=False):
+    fce = FantasyContentEngine()
+    q = fce.get_quiz_post()
+    caption = q["question"]
+    entity = q["entity"]
+    
+    img_url = fetch_entity_photo(entity)
+    img_path = download_image(img_url, f"quiz_{entity.replace(' ', '_')}.jpg") if img_url else None
+    
+    print("\n--- [FPL QUIZ POST] ---")
+    print("Entity:", entity, "| Image:", img_path)
+    print(caption)
+    
+    if publish:
+        print("Publishing Quiz to Fantasy Volt...")
+        if img_path:
+            res = post_photo(img_path, caption=caption, page_key="fantasy_volt")
+        else:
+            res = post_text(caption, page_key="fantasy_volt")
+        print("PUBLISHED SUCCESSFULLY! Post ID:", res.get("id"))
+    else:
+        print("(Dry-run: not published. Add --publish to post live)")
+
+def cmd_fpl_facts(publish=False):
+    fce = FantasyContentEngine()
+    f = fce.get_facts_post()
+    caption = f["text"]
+    entity = f["entity"]
+    
+    img_url = fetch_entity_photo(entity)
+    img_path = download_image(img_url, f"fact_{entity.replace(' ', '_')}.jpg") if img_url else None
+    
+    print("\n--- [FPL FACTS POST] ---")
+    print("Entity:", entity, "| Image:", img_path)
+    print(caption)
+    
+    if publish:
+        print("Publishing Fact to Fantasy Volt...")
+        if img_path:
+            res = post_photo(img_path, caption=caption, page_key="fantasy_volt")
+        else:
+            res = post_text(caption, page_key="fantasy_volt")
+        print("PUBLISHED SUCCESSFULLY! Post ID:", res.get("id"))
+    else:
+        print("(Dry-run: not published. Add --publish to post live)")
+
+def cmd_fpl_picks(publish=False):
+    fce = FantasyContentEngine()
+    p = fce.get_captaincy_picks_post()
+    caption = p["text"]
+    entity = p["entity"]
+    
+    img_url = fetch_entity_photo(entity)
+    img_path = download_image(img_url, f"picks_{entity.replace(' ', '_')}.jpg") if img_url else None
+    
+    print("\n--- [FPL PICKS POST] ---")
+    print("Entity:", entity, "| Image:", img_path)
+    print(caption)
+    
+    if publish:
+        print("Publishing Picks to Fantasy Volt...")
+        if img_path:
+            res = post_photo(img_path, caption=caption, page_key="fantasy_volt")
+        else:
+            res = post_text(caption, page_key="fantasy_volt")
+        print("PUBLISHED SUCCESSFULLY! Post ID:", res.get("id"))
+    else:
+        print("(Dry-run: not published. Add --publish to post live)")
+
+def cmd_fpl_differentials(publish=False):
+    fce = FantasyContentEngine()
+    d = fce.get_differentials_post()
+    caption = d["text"]
+    entity = d["entity"]
+    
+    img_url = fetch_entity_photo(entity)
+    img_path = download_image(img_url, f"diff_{entity.replace(' ', '_')}.jpg") if img_url else None
+    
+    print("\n--- [FPL DIFFERENTIALS POST] ---")
+    print("Entity:", entity, "| Image:", img_path)
+    print(caption)
+    
+    if publish:
+        print("Publishing Differentials to Fantasy Volt...")
+        if img_path:
+            res = post_photo(img_path, caption=caption, page_key="fantasy_volt")
+        else:
+            res = post_text(caption, page_key="fantasy_volt")
+        print("PUBLISHED SUCCESSFULLY! Post ID:", res.get("id"))
+    else:
+        print("(Dry-run: not published. Add --publish to post live)")
+
+def cmd_fpl_price_alert(publish=False):
+    fce = FantasyContentEngine()
+    pr = fce.get_evening_price_prediction_post()
+    caption = pr["text"]
+    entity = pr["entity"]
+    
+    img_url = fetch_entity_photo(entity)
+    img_path = download_image(img_url, f"pr_alert_{entity.replace(' ', '_')}.jpg") if img_url else None
+    
+    print("\n--- [FPL PRICE ALERT POST] ---")
+    print("Entity:", entity, "| Image:", img_path)
+    print(caption)
+    
+    if publish:
+        print("Publishing Price Alert to Fantasy Volt...")
+        if img_path:
+            res = post_photo(img_path, caption=caption, page_key="fantasy_volt")
+        else:
+            res = post_text(caption, page_key="fantasy_volt")
+        print("PUBLISHED SUCCESSFULLY! Post ID:", res.get("id"))
+    else:
+        print("(Dry-run: not published. Add --publish to post live)")
+
 def main():
     parser = argparse.ArgumentParser(description="Fantasy Volt & Kora Volt Automation")
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
@@ -289,6 +406,21 @@ def main():
     p_morn = subparsers.add_parser("morning", help="Generate today's fixtures card & publish")
     p_morn.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
     
+    p_quiz = subparsers.add_parser("fpl-quiz", help="Post interactive FPL quiz")
+    p_quiz.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
+
+    p_facts = subparsers.add_parser("fpl-facts", help="Post FPL historical facts")
+    p_facts.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
+
+    p_picks = subparsers.add_parser("fpl-picks", help="Post FPL captaincy picks")
+    p_picks.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
+
+    p_diffs = subparsers.add_parser("fpl-differentials", help="Post FPL differentials")
+    p_diffs.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
+
+    p_pr_alert = subparsers.add_parser("fpl-price-alert", help="Post evening price prediction alert")
+    p_pr_alert.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
+
     args = parser.parse_args()
     
     if args.command == "status":
@@ -303,6 +435,16 @@ def main():
         cmd_post_news(publish=args.publish, count=args.count)
     elif args.command == "photo-news":
         cmd_photo_news(publish=args.publish, count=args.count)
+    elif args.command == "fpl-quiz":
+        cmd_fpl_quiz(publish=args.publish)
+    elif args.command == "fpl-facts":
+        cmd_fpl_facts(publish=args.publish)
+    elif args.command == "fpl-picks":
+        cmd_fpl_picks(publish=args.publish)
+    elif args.command == "fpl-differentials":
+        cmd_fpl_differentials(publish=args.publish)
+    elif args.command == "fpl-price-alert":
+        cmd_fpl_price_alert(publish=args.publish)
     elif args.command == "fpl-debate":
         cmd_fpl_debate(publish=args.publish, mode=getattr(args, "mode", "debate"))
     else:
