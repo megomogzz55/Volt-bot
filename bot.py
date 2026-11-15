@@ -21,7 +21,7 @@ from engines.live_score_engine import LiveScoreEngine
 from engines.news_engine import NewsEngine
 from engines.photo_news_engine import PhotoNewsEngine, download_image, fetch_entity_photo
 from engines.fantasy_content_engine import FantasyContentEngine
-from engines.vector_goal_card import render_vector_goal_card
+from engines.vector_goal_card import render_goal_card
 
 def cmd_status():
     print("=" * 60)
@@ -384,7 +384,7 @@ def cmd_fpl_price_alert(publish=False):
 
 
 def cmd_vector_goal(scorer="محمد صلاح", assister="لويس دياز", team="ليفربول", minute=34, stats="هدف رائع", publish=False):
-    card_path = render_vector_goal_card(scorer, assister, team, minute, stats)
+    card_path = render_goal_card(scorer, assister, team, minute, stats)
     print(f"\nRendered Vector Goal Card: {card_path}")
     
     caption = (

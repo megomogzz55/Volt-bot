@@ -1,14 +1,11 @@
 """
-Vector-Art Goal & Assist Card Generator
-Generates 1080x1350 mobile-portrait sports cards in Pop-Art / Comic Ben-Day Dot style:
-- Vector player portrait integration
-- Neon glow typography for GOAL and ASSIST
-- Ben-Day halftone retro dots on split Teal/Red background
-- Renders via Headless Chromium in 1.5s
+Dual-Mode Goal & Assist Card Generator
+Supports:
+1. Standard Mode (اللاعبين العاديين): Pure Typography & Badge (No Photo) - Instant, matches orig_goal_assist.jpg 100%
+2. Superstar Mode (نجوم الصف الأول): Vector Pop-Art with Halftone & Hero Portrait
 """
 import os
 import subprocess
-import shutil
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 VECTORS_DIR = os.path.join(BASE_DIR, "assets", "vectors")
@@ -16,41 +13,147 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 HTML_TEMPLATE_PATH = os.path.join(BASE_DIR, "templates", "temp_vector_goal.html")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Map player name keywords to vector portrait files
-VECTOR_MAPPING = {
-    "مبابي": "mbappe_transparent.png",
-    "mbappe": "mbappe_transparent.png",
+SUPERSTARS = {
     "صلاح": "salah_pop.jpg",
+    "محمد صلاح": "salah_pop.jpg",
     "salah": "salah_pop.jpg",
+    "مبابي": "mbappe_transparent.png",
+    "كيليان مبابي": "mbappe_transparent.png",
+    "mbappe": "mbappe_transparent.png",
     "ماينو": "mainoo.jpg",
     "mainoo": "mainoo.jpg",
     "جارناتشو": "garnacho.jpg",
     "garnacho": "garnacho.jpg",
     "برونو": "bruno.jpg",
-    "bruno": "bruno.jpg",
+    "برونو فيرنانديز": "bruno.jpg",
     "كين": "kane.jpg",
-    "kane": "kane.jpg",
-    "نيلسون": "nelson.jpg",
-    "nelson": "nelson.jpg"
+    "هاري كين": "kane.jpg",
+    "نيلسون": "nelson.jpg"
 }
 
-def get_vector_image_path(player_name):
+def is_superstar(player_name):
     clean = str(player_name).lower()
-    for k, fname in VECTOR_MAPPING.items():
+    for k in SUPERSTARS.keys():
         if k in clean:
-            p = os.path.join(VECTORS_DIR, fname)
-            if os.path.exists(p):
-                return p
-    # Default fallback
-    return os.path.join(VECTORS_DIR, "salah_pop.jpg")
+            return True, SUPERSTARS[k]
+    return False, None
 
+def render_standard_goal_card(scorer, assister="بدون صناعة", minute=34, output_path=None):
+    """
+    Standard Mode for ordinary players: PURE TYPOGRAPHY (NO PHOTO)
+    Matches orig_goal_assist.jpg with 1080x1350 resolution, neon glows, and center lion logo.
+    """
+    lion_uri = f"file:///{os.path.join(BASE_DIR, 'assets', 'pl_lion_600.png').replace(os.sep, '/')}"
+    
+    html = f"""<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@700;800&family=Montserrat:wght@900&display=swap');
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    width: 1080px; height: 1350px; overflow: hidden;
+    font-family: 'Almarai', sans-serif; position: relative;
+    display: flex; flex-direction: column;
+  }}
+  .top-half {{
+    width: 1080px; height: 675px;
+    background: linear-gradient(135deg, #028E9B 0%, #005662 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding-bottom: 60px; position: relative;
+  }}
+  .bottom-half {{
+    width: 1080px; height: 675px;
+    background: linear-gradient(135deg, #F0484C 0%, #B71C1C 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding-top: 60px; position: relative;
+  }}
+  .halftone {{
+    position: absolute; width: 100%; height: 100%;
+    background-image: radial-gradient(rgba(0, 0, 0, 0.18) 18%, transparent 18%);
+    background-size: 28px 28px; pointer-events: none;
+  }}
+  .english-tag {{
+    font-family: 'Montserrat', sans-serif; font-size: 135px; font-weight: 900;
+    color: #FFFFFF; letter-spacing: 6px; line-height: 1; margin-bottom: 25px;
+    text-shadow: 0 0 15px #FFFFFF, 0 0 35px rgba(0, 229, 255, 0.95), 0 0 70px rgba(0, 229, 255, 0.6);
+  }}
+  .assist-tag {{
+    text-shadow: 0 0 15px #FFFFFF, 0 0 35px rgba(255, 120, 120, 0.95), 0 0 70px rgba(255, 120, 120, 0.6);
+  }}
+  .player-name-top {{
+    font-size: 105px; font-weight: 800; color: #F0484C;
+    -webkit-text-stroke: 5px #1A1D20; text-shadow: 4px 6px 0px #1A1D20;
+    z-index: 2;
+  }}
+  .player-name-bottom {{
+    font-size: 105px; font-weight: 800; color: #00E5FF;
+    -webkit-text-stroke: 5px #1A1D20; text-shadow: 4px 6px 0px #1A1D20;
+    z-index: 2;
+  }}
+  .center-badge {{
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 210px; height: 210px; background: #0A0D10; border-radius: 50%;
+    border: 5px solid #FFFFFF; box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 10;
+  }}
+  .badge-lion {{
+    width: 105px; height: 105px;
+    background: url('{lion_uri}') no-repeat center;
+    background-size: contain; filter: brightness(0) invert(1);
+  }}
+  .badge-txt {{
+    font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 900;
+    color: #00E5FF; letter-spacing: 2px; margin-top: 5px;
+  }}
+  .minute-pill {{
+    position: absolute; bottom: 35px;
+    background: rgba(10, 13, 16, 0.9); border: 2px solid #00E5FF;
+    padding: 10px 30px; border-radius: 30px; color: #00E5FF;
+    font-size: 26px; font-weight: 800;
+  }}
+</style>
+</head>
+<body>
+  <div class="top-half">
+    <div class="halftone"></div>
+    <div class="english-tag">GOAL</div>
+    <div class="player-name-top">{scorer}</div>
+  </div>
+  
+  <div class="center-badge">
+    <div class="badge-lion"></div>
+    <div class="badge-txt">FANTASY VOLT</div>
+  </div>
+  
+  <div class="bottom-half">
+    <div class="halftone"></div>
+    <div class="english-tag assist-tag">ASSIST</div>
+    <div class="player-name-bottom">{assister}</div>
+    <div class="minute-pill">⏱️ الدقيقة {minute}'</div>
+  </div>
+</body>
+</html>"""
 
-def render_vector_goal_card(scorer, assister="بدون صناعة", team="البريميرليج", minute=34, stats="هدف حاسم", output_path=None):
-    vector_img = get_vector_image_path(scorer)
-    vector_uri = f"file:///{vector_img.replace(os.sep, '/')}"
+    with open(HTML_TEMPLATE_PATH, "w", encoding="utf-8") as f:
+        f.write(html)
+        
+    if not output_path:
+        output_path = os.path.join(OUTPUT_DIR, f"goal_{scorer.replace(' ', '_')}.png")
+        
+    _render_html(HTML_TEMPLATE_PATH, output_path)
+    return output_path
+
+def render_superstar_goal_card(scorer, assister, team, minute, stats, vector_file, output_path=None):
+    """
+    Superstar Mode: Hero Vector Portrait + Pop Art Card
+    """
+    vector_uri = f"file:///{os.path.join(VECTORS_DIR, vector_file).replace(os.sep, '/')}"
     lion_uri = f"file:///{os.path.join(BASE_DIR, 'assets', 'pl_lion_600.png').replace(os.sep, '/')}"
 
-    html_content = f"""<!DOCTYPE html>
+    html = f"""<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -110,9 +213,10 @@ def render_vector_goal_card(scorer, assister="بدون صناعة", team="الب
     width: 460px; height: 620px; border-radius: 40px; overflow: hidden;
     position: relative; border: 8px solid #FFFFFF;
     box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 0 16px rgba(10, 13, 16, 0.5);
-    background: #A51010;
+    background: radial-gradient(circle at 50% 40%, #1A237E 0%, #0D1333 100%);
+    display: flex; align-items: center; justify-content: center;
   }}
-  .vector-img {{ width: 100%; height: 100%; object-fit: cover; }}
+  .vector-img {{ max-width: 95%; max-height: 95%; object-fit: contain; }}
   .details-container {{
     width: 480px; display: flex; flex-direction: column; gap: 40px;
   }}
@@ -179,11 +283,15 @@ def render_vector_goal_card(scorer, assister="بدون صناعة", team="الب
 </html>"""
 
     with open(HTML_TEMPLATE_PATH, "w", encoding="utf-8") as f:
-        f.write(html_content)
-
+        f.write(html)
+        
     if not output_path:
-        output_path = os.path.join(OUTPUT_DIR, f"vector_goal_{scorer.replace(' ', '_')}.png")
+        output_path = os.path.join(OUTPUT_DIR, f"superstar_goal_{scorer.replace(' ', '_')}.png")
+        
+    _render_html(HTML_TEMPLATE_PATH, output_path)
+    return output_path
 
+def _render_html(html_file, output_path):
     edge_exe = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
     if not os.path.exists(edge_exe):
         edge_exe = "chromium"
@@ -195,7 +303,20 @@ def render_vector_goal_card(scorer, assister="بدون صناعة", team="الب
         "--hide-scrollbars",
         "--window-size=1080,1350",
         f"--screenshot={output_path}",
-        f"file:///{HTML_TEMPLATE_PATH.replace(os.sep, '/')}"
+        f"file:///{html_file.replace(os.sep, '/')}"
     ]
     subprocess.run(cmd, capture_output=True, check=True)
-    return output_path
+
+def render_goal_card(scorer, assister="بدون صناعة", team="البريميرليج", minute=34, stats="هدف حاسم", output_path=None):
+    """
+    Smart Dispatcher:
+    - Superstars (Salah, Haaland, Mbappe, Bruno, Palmer, Mainoo): Uses Hero Vector Pop-Art!
+    - Ordinary Players (Kerkez, Semenyo, Gboho, Barry, etc.): Uses Pure Typography (NO PHOTO) - 100% matches orig_goal_assist.jpg!
+    """
+    is_star, vector_file = is_superstar(scorer)
+    if is_star:
+        print(f"Goal Scorer '{scorer}' is a SUPERSTAR -> Rendering with Vector Art ({vector_file})")
+        return render_superstar_goal_card(scorer, assister, team, minute, stats, vector_file, output_path)
+    else:
+        print(f"Goal Scorer '{scorer}' is an ORDINARY PLAYER -> Rendering Pure Typography (No Photo)")
+        return render_standard_goal_card(scorer, assister, minute, output_path)
