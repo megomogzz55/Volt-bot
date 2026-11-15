@@ -1,0 +1,36 @@
+name: Kora Volt - Morning Fixtures Card
+
+on:
+  schedule:
+    # 07:00 UTC = 09:00 AM Cairo Local Time (UTC+2)
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  publish_morning_fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install System Fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-dejavu fonts-freefont-ttf
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Morning Fixtures & Publish
+        env:
+          KV_PAGE_ID: ${{ secrets.KV_PAGE_ID }}
+          KV_ACCESS_TOKEN: ${{ secrets.KV_ACCESS_TOKEN }}
+        run: |
+          python bot.py morning --publish

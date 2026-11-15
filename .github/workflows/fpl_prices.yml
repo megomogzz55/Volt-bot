@@ -1,0 +1,36 @@
+name: Fantasy Volt - Daily Price Changes
+
+on:
+  schedule:
+    # 01:30 UTC = 03:30 AM Cairo Local Time (UTC+2)
+    - cron: '30 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  publish_prices:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install System Fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-dejavu fonts-freefont-ttf
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Price Changes Engine & Publish
+        env:
+          FV_PAGE_ID: ${{ secrets.FV_PAGE_ID }}
+          FV_ACCESS_TOKEN: ${{ secrets.FV_ACCESS_TOKEN }}
+        run: |
+          python bot.py prices --publish
