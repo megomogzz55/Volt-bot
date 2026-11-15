@@ -30,7 +30,7 @@ jobs:
 
       - name: Run Morning Fixtures & Publish
         env:
-          KV_PAGE_ID: ${{ secrets.KV_PAGE_ID }}
-          KV_ACCESS_TOKEN: ${{ secrets.KV_ACCESS_TOKEN }}
+          FB_NEWS_PAGE_ID: ${{ secrets.FB_NEWS_PAGE_ID || secrets.KV_PAGE_ID }}
+          FB_NEWS_ACCESS_TOKEN: ${{ secrets.FB_NEWS_ACCESS_TOKEN || secrets.KV_ACCESS_TOKEN }}
         run: |
           python bot.py morning --publish

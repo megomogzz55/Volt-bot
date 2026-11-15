@@ -14,14 +14,14 @@ def load_config():
 
 def get_page_credentials(page_key="fantasy_volt"):
     # Check environment variables first (used by GitHub Actions & Cloud)
-    env_token_fv = os.environ.get("FV_ACCESS_TOKEN")
-    env_token_kv = os.environ.get("KV_ACCESS_TOKEN")
+    env_token_fv = os.environ.get("FB_FANTASY_ACCESS_TOKEN") or os.environ.get("FV_ACCESS_TOKEN")
+    env_token_kv = os.environ.get("FB_NEWS_ACCESS_TOKEN") or os.environ.get("KV_ACCESS_TOKEN")
     
     if page_key == "fantasy_volt" and env_token_fv:
-        page_id = os.environ.get("FV_PAGE_ID", "285388077999286")
+        page_id = os.environ.get("FB_FANTASY_PAGE_ID") or os.environ.get("FV_PAGE_ID", "285388077999286")
         return page_id, env_token_fv
     elif page_key == "kora_volt" and env_token_kv:
-        page_id = os.environ.get("KV_PAGE_ID", "300362406499652")
+        page_id = os.environ.get("FB_NEWS_PAGE_ID") or os.environ.get("KV_PAGE_ID", "300362406499652")
         return page_id, env_token_kv
 
     # Local fallback to config.json

@@ -30,7 +30,7 @@ jobs:
 
       - name: Run Price Changes Engine & Publish
         env:
-          FV_PAGE_ID: ${{ secrets.FV_PAGE_ID }}
-          FV_ACCESS_TOKEN: ${{ secrets.FV_ACCESS_TOKEN }}
+          FB_FANTASY_PAGE_ID: ${{ secrets.FB_FANTASY_PAGE_ID || secrets.FV_PAGE_ID }}
+          FB_FANTASY_ACCESS_TOKEN: ${{ secrets.FB_FANTASY_ACCESS_TOKEN || secrets.FV_ACCESS_TOKEN }}
         run: |
           python bot.py prices --publish
