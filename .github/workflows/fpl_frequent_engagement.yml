@@ -1,0 +1,31 @@
+name: Fantasy Volt - Daily Discussions & Debates
+
+on:
+  schedule:
+    # 12:00 UTC (02:00 PM Cairo) and 18:00 UTC (08:00 PM Cairo)
+    - cron: '0 12,18 * * *'
+  workflow_dispatch:
+
+jobs:
+  publish_fpl_debate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Publish FPL Debate / Tip
+        env:
+          FB_FANTASY_PAGE_ID: ${{ secrets.FB_FANTASY_PAGE_ID || secrets.FV_PAGE_ID }}
+          FB_FANTASY_ACCESS_TOKEN: ${{ secrets.FB_FANTASY_ACCESS_TOKEN || secrets.FV_ACCESS_TOKEN }}
+        run: |
+          python bot.py fpl-debate --publish

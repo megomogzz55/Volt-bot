@@ -139,24 +139,74 @@ def cmd_morning_fixtures(publish=False):
         print("\nGenerated Caption (preview):\n", caption)
         print("\nRun with --publish to publish live to Facebook.")
 
-def cmd_post_news(publish=False):
+def cmd_post_news(publish=False, count=1):
     engine = NewsEngine()
-    news = engine.fetch_arabic_sports_news(limit=5)
+    news = engine.fetch_news_stream(limit=count * 3)
     if not news:
-        print("No news items found.")
+        print("No new unposted articles found.")
         return
         
-    item = news[0]
-    caption = engine.format_facebook_post(item)
-    print("Latest News Item:")
-    print(caption)
+    posted_count = 0
+    for item in news:
+        if posted_count >= count:
+            break
+        caption = engine.format_engaging_post(item)
+        print(f"\n--- [NEWS POST #{posted_count + 1}] ---")
+        print(caption)
+        
+        if publish:
+            print(f"Publishing to Kora Volt page...")
+            try:
+                res = post_text(caption, page_key="kora_volt")
+                print("PUBLISHED SUCCESSFULLY! Post ID:", res.get("id"))
+                engine.mark_posted(item["title"], item.get("category"))
+                posted_count += 1
+            except Exception as e:
+                print("Publish Error:", e)
+        else:
+            posted_count += 1
+            print("(Dry-run: not published. Add --publish to post live)")
+
+def cmd_fpl_debate(publish=False):
+    debates = [
+        (
+            "⚡ حيرة الكابتنة في الجولة القادمة | فانتازي ڤولت\n\n"
+            "لو التشكيلة بتاعتك فيها:\n"
+            "👑 محمد صلاح (ماتش قوي على ملعبه)\n"
+            "🤖 إيرلينج هالاند (مواجهة صعبة خارج الأرض)\n"
+            "🪄 كول بالمر (فورمة استثنائية)\n\n"
+            "الكابتن المضمون في رأيك مين؟ والريسك مع مين؟ 🤔👇\n\n"
+            "#فانتازي_الدوري_الانجليزي #FPL #FantasyVolt #صلاح #هالاند"
+        ),
+        (
+            "🔥 سؤال الموسم للمدربين | فانتازي ڤولت\n\n"
+            "معاك كاش 10.5 مليون.. ومحتاج لاعب وسط سوبر يفرق في الترتيب:\n"
+            "1️⃣ كول بالمر (تشيلسي)\n"
+            "2️⃣ بوكايو ساكا (أرسنال)\n\n"
+            "هتختار مين فيهم بدون تردد وليه؟ شاركنا اختيارك! 👇\n\n"
+            "#فانتازي_الدوري_الانجليزي #FPL #FantasyVolt"
+        ),
+        (
+            "📊 الخيارات التفاضلية (Differentials) | فانتازي ڤولت\n\n"
+            "أفضل 3 لاعبين بنسبة ملكية أقل من 10% قادرين يفجروا الترتيب في الجولات القادمة:\n\n"
+            "🎯 إيزي (كريستال بالاس) - جدول مباريات مميز\n"
+            "🎯 كولوسيفسكي (توتنهام) - صانع الفرص الأول للفريق\n"
+            "🎯 مورجان روجرز (أستون فيلا) - سعر اقتصادي وأساسي دائم\n\n"
+            "مين فيهم عينك عليه في تشكيلتك؟ شاركنا في الكومنتات! 👇\n\n"
+            "#فانتازي_الدوري_الانجليزي #FPL #FantasyVolt"
+        )
+    ]
+    import random
+    post_txt = random.choice(debates)
+    print("\n--- [FPL DEBATE POST] ---")
+    print(post_txt)
     
     if publish:
-        print("Publishing to Kora Volt page...")
-        res = post_text(caption, page_key="kora_volt")
+        print("Publishing to Fantasy Volt page...")
+        res = post_text(post_txt, page_key="fantasy_volt")
         print("PUBLISHED SUCCESSFULLY! Post ID:", res.get("id"))
     else:
-        print("\nRun with --publish to publish live to Facebook.")
+        print("\n(Dry-run: not published. Add --publish to post live)")
 
 def main():
     parser = argparse.ArgumentParser(description="Fantasy Volt & Kora Volt Automation")
@@ -170,6 +220,10 @@ def main():
     
     p_news = subparsers.add_parser("news", help="Fetch latest sports news")
     p_news.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
+    p_news.add_argument("--count", type=int, default=1, help="Number of distinct news articles to post")
+    
+    p_fpl = subparsers.add_parser("fpl-debate", help="Post an engaging FPL debate/discussion")
+    p_fpl.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
     
     p_morn = subparsers.add_parser("morning", help="Generate today's fixtures card & publish")
     p_morn.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
@@ -185,7 +239,9 @@ def main():
     elif args.command == "morning":
         cmd_morning_fixtures(publish=args.publish)
     elif args.command == "news":
-        cmd_post_news(publish=args.publish)
+        cmd_post_news(publish=args.publish, count=args.count)
+    elif args.command == "fpl-debate":
+        cmd_fpl_debate(publish=args.publish)
     else:
         parser.print_help()
 
