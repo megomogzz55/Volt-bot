@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@700;800&family=Montserrat:wght@900&display=swap');
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    width: 1080px;
+    height: 1350px;
+    overflow: hidden;
+    background: #028E9B;
+    font-family: 'Almarai', sans-serif;
+  }
+  
+  .container {
+    width: 1080px;
+    height: 1350px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  
+  /* Top Half: Teal */
+  .top-half {
+    height: 675px;
+    background: linear-gradient(135deg, #008795 0%, #00606B 100%);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 50px;
+  }
+  
+  /* Bottom Half: Coral */
+  .bottom-half {
+    height: 675px;
+    background: linear-gradient(135deg, #F0484C 0%, #D8282C 100%);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 50px;
+  }
+  
+  /* Background lightning shards */
+  .lightning {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0.12;
+    background-image: 
+      radial-gradient(#ffffff 15%, transparent 16%),
+      radial-gradient(#000000 15%, transparent 16%);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+  
+  .english-tag {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 110px;
+    font-weight: 900;
+    color: #FFFFFF;
+    letter-spacing: 4px;
+    text-shadow: 
+      0 0 10px #FFFFFF,
+      0 0 25px rgba(0, 229, 255, 0.8),
+      0 0 50px rgba(0, 229, 255, 0.5);
+    margin-bottom: 10px;
+  }
+  
+  .assist-tag {
+    text-shadow: 
+      0 0 10px #FFFFFF,
+      0 0 25px rgba(255, 120, 120, 0.8),
+      0 0 50px rgba(255, 120, 120, 0.5);
+  }
+  
+  .player-name-top {
+    font-size: 95px;
+    font-weight: 800;
+    color: #EF4145;
+    -webkit-text-stroke: 4px #1A1D20;
+    text-shadow: 4px 6px 0px #1A1D20;
+    z-index: 2;
+  }
+  
+  .player-name-bottom {
+    font-size: 95px;
+    font-weight: 800;
+    color: #00E5FF;
+    -webkit-text-stroke: 4px #1A1D20;
+    text-shadow: 4px 6px 0px #1A1D20;
+    z-index: 2;
+  }
+  
+  /* Center Lion Badge */
+  .center-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    background: #0A0D10;
+    border-radius: 50%;
+    border: 5px solid #FFFFFF;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  
+  .badge-lion {
+    width: 100px;
+    height: 100px;
+    background: url('file:///C:/Users/Mogz/fantasy-volt/assets/pl_lion_600.png') no-repeat center;
+    background-size: contain;
+    filter: brightness(0) invert(1);
+  }
+  
+  .badge-txt {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    color: #00E5FF;
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+  
+  .minute-tag {
+    position: absolute;
+    bottom: 30px;
+    background: rgba(10, 13, 16, 0.8);
+    border: 2px solid #00E5FF;
+    padding: 10px 30px;
+    border-radius: 30px;
+    color: #FFFFFF;
+    font-size: 28px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top-half">
+    <div class="lightning"></div>
+    <div class="english-tag">GOAL</div>
+    <div class="player-name-top">محمد صلاح</div>
+  </div>
+  
+  <div class="center-badge">
+    <div class="badge-lion"></div>
+    <div class="badge-txt">FANTASY VOLT</div>
+  </div>
+  
+  <div class="bottom-half">
+    <div class="lightning"></div>
+    <div class="english-tag assist-tag">ASSIST</div>
+    <div class="player-name-bottom">لويس دياز</div>
+    <div class="minute-tag">⏱️ الدقيقة 34'</div>
+  </div>
+</div>
+</body>
+</html>

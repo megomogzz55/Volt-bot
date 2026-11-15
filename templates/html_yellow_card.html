@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@700;800&family=Montserrat:wght@900&display=swap');
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    width: 1080px;
+    height: 1350px;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 30%, #E53935 0%, #8E0000 100%);
+    font-family: 'Almarai', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  
+  /* Header */
+  .header {
+    margin-top: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .header-word {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 110px;
+    font-weight: 900;
+    color: #FFE57F;
+    letter-spacing: 5px;
+    line-height: 1.05;
+    text-shadow: 
+      0 0 10px #FFD54F,
+      0 0 30px rgba(255, 160, 0, 0.9),
+      0 0 60px rgba(255, 111, 0, 0.6);
+  }
+  
+  /* 3D Yellow Card */
+  .card-container {
+    margin-top: 50px;
+    width: 660px;
+    height: 820px;
+    position: relative;
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 
+      0 25px 60px rgba(0, 0, 0, 0.7),
+      0 10px 20px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #FFC400;
+  }
+  
+  /* Diagonal Card Split Shadow */
+  .card-facet {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 0 820px 480px;
+    border-color: transparent transparent #E6A800 transparent;
+    z-index: 1;
+  }
+  
+  .card-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px;
+  }
+  
+  .card-lion {
+    width: 130px;
+    height: 130px;
+    background: url('file:///C:/Users/Mogz/fantasy-volt/assets/pl_lion_600.png') no-repeat center;
+    background-size: contain;
+    filter: brightness(0) sepia(1) hue-rotate(5deg) saturate(6) brightness(0.4);
+  }
+  
+  .card-brand {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 900;
+    color: #5D4037;
+    letter-spacing: 3px;
+    margin-top: 8px;
+  }
+  
+  .player-name {
+    margin-top: 100px;
+    font-size: 100px;
+    font-weight: 800;
+    color: #EF4145;
+    -webkit-text-stroke: 4px #260205;
+    text-shadow: 4px 6px 0px #260205;
+  }
+  
+  .points-penalty {
+    margin-top: auto;
+    margin-bottom: 60px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 55px;
+    font-weight: 900;
+    color: #EF4145;
+    -webkit-text-stroke: 3px #260205;
+    text-shadow: 3px 4px 0px #260205;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-word">YELLOW</div>
+    <div class="header-word">CARD</div>
+  </div>
+  
+  <div class="card-container">
+    <div class="card-facet"></div>
+    <div class="card-content">
+      <div class="card-lion"></div>
+      <div class="card-brand">FANTASY VOLT</div>
+      <div class="player-name">كيركيز</div>
+      <div class="points-penalty">- 1 POINTS</div>
+    </div>
+  </div>
+</body>
+</html>

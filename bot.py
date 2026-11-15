@@ -21,6 +21,7 @@ from engines.live_score_engine import LiveScoreEngine
 from engines.news_engine import NewsEngine
 from engines.photo_news_engine import PhotoNewsEngine, download_image, fetch_entity_photo
 from engines.fantasy_content_engine import FantasyContentEngine
+from engines.vector_goal_card import render_vector_goal_card
 
 def cmd_status():
     print("=" * 60)
@@ -381,6 +382,27 @@ def cmd_fpl_price_alert(publish=False):
     else:
         print("(Dry-run: not published. Add --publish to post live)")
 
+
+def cmd_vector_goal(scorer="محمد صلاح", assister="لويس دياز", team="ليفربول", minute=34, stats="هدف رائع", publish=False):
+    card_path = render_vector_goal_card(scorer, assister, team, minute, stats)
+    print(f"\nRendered Vector Goal Card: {card_path}")
+    
+    caption = (
+        f"⚽ جوووووووووول! {scorer} يسجل لـ {team}! 🔥👑\n"
+        f"🅰️ أسيست: {assister}\n"
+        f"⏱️ الدقيقة: {minute}'\n\n"
+        f"مين مأكبتنه ومعاه في التشكيلة؟ احسب نقطك! ⚡\n"
+        f"#فانتازي_الدوري_الانجليزي #FPL #FantasyVolt #{team.replace(' ', '_')}"
+    )
+    print("Caption:\n", caption)
+    
+    if publish:
+        print("Publishing Vector Goal Card to Fantasy Volt page...")
+        res = post_photo(card_path, caption=caption, page_key="fantasy_volt")
+        print("PUBLISHED SUCCESSFULLY! Post ID:", res.get("id"))
+    else:
+        print("\n(Dry-run: not published. Add --publish to post live)")
+
 def main():
     parser = argparse.ArgumentParser(description="Fantasy Volt & Kora Volt Automation")
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
@@ -421,6 +443,14 @@ def main():
     p_pr_alert = subparsers.add_parser("fpl-price-alert", help="Post evening price prediction alert")
     p_pr_alert.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
 
+    p_vg = subparsers.add_parser("vector-goal", help="Render Pop-Art Vector Goal & Assist Card")
+    p_vg.add_argument("--scorer", default="محمد صلاح", help="Goal scorer Arabic name")
+    p_vg.add_argument("--assister", default="لويس دياز", help="Assist provider Arabic name")
+    p_vg.add_argument("--team", default="ليفربول", help="Team Arabic name")
+    p_vg.add_argument("--minute", type=int, default=34, help="Match minute")
+    p_vg.add_argument("--stats", default="هدف رائع", help="Short stat line")
+    p_vg.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
+
     args = parser.parse_args()
     
     if args.command == "status":
@@ -435,6 +465,15 @@ def main():
         cmd_post_news(publish=args.publish, count=args.count)
     elif args.command == "photo-news":
         cmd_photo_news(publish=args.publish, count=args.count)
+    elif args.command == "vector-goal":
+        cmd_vector_goal(
+            scorer=args.scorer,
+            assister=args.assister,
+            team=args.team,
+            minute=args.minute,
+            stats=args.stats,
+            publish=args.publish
+        )
     elif args.command == "fpl-quiz":
         cmd_fpl_quiz(publish=args.publish)
     elif args.command == "fpl-facts":
