@@ -22,6 +22,8 @@ on:
 jobs:
   publish_fantasy_content:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4

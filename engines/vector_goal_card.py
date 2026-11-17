@@ -6,6 +6,7 @@ Supports:
 """
 import os
 import subprocess
+from engines.player_face_engine import get_player_vector_art
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 VECTORS_DIR = os.path.join(BASE_DIR, "assets", "vectors")
@@ -150,7 +151,10 @@ def render_superstar_goal_card(scorer, assister, team, minute, stats, vector_fil
     """
     Superstar Mode: Hero Vector Portrait + Pop Art Card
     """
-    vector_uri = f"file:///{os.path.join(VECTORS_DIR, vector_file).replace(os.sep, '/')}"
+    if os.path.isabs(vector_file):
+        vector_uri = f"file:///{vector_file.replace(os.sep, '/')}"
+    else:
+        vector_uri = f"file:///{os.path.join(VECTORS_DIR, vector_file).replace(os.sep, '/')}"
     lion_uri = f"file:///{os.path.join(BASE_DIR, 'assets', 'pl_lion_600.png').replace(os.sep, '/')}"
 
     html = f"""<!DOCTYPE html>
@@ -309,13 +313,15 @@ def _render_html(html_file, output_path):
 
 def render_goal_card(scorer, assister="بدون صناعة", team="البريميرليج", minute=34, stats="هدف حاسم", output_path=None):
     """
-    Smart Dispatcher:
-    - Superstars (Salah, Haaland, Mbappe, Bruno, Palmer, Mainoo): Uses Hero Vector Pop-Art!
-    - Ordinary Players (Kerkez, Semenyo, Gboho, Barry, etc.): Uses Pure Typography (NO PHOTO) - 100% matches orig_goal_assist.jpg!
+    Smart Automated Dispatcher:
+    - Superstars (Salah, Haaland, Saka, Palmer, Foden, Mbappe, Vinicius, Yamal, etc.):
+      Automatically fetches official photo, converts to vector pop-art, and renders Superstar Card!
+    - Ordinary Players (Kerkez, Semenyo, Gboho, Barry, Wood, etc.):
+      Uses Pure Typography (NO PHOTO) - 100% matches orig_goal_assist.jpg!
     """
-    is_star, vector_file = is_superstar(scorer)
-    if is_star:
-        print(f"Goal Scorer '{scorer}' is a SUPERSTAR -> Rendering with Vector Art ({vector_file})")
+    vector_file = get_player_vector_art(scorer)
+    if vector_file:
+        print(f"Goal Scorer '{scorer}' is a SUPERSTAR -> Rendering with Auto-Vector Art ({vector_file})")
         return render_superstar_goal_card(scorer, assister, team, minute, stats, vector_file, output_path)
     else:
         print(f"Goal Scorer '{scorer}' is an ORDINARY PLAYER -> Rendering Pure Typography (No Photo)")

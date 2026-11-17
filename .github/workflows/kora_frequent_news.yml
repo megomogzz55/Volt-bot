@@ -9,6 +9,8 @@ on:
 jobs:
   publish_news:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -29,3 +31,10 @@ jobs:
           FB_NEWS_ACCESS_TOKEN: ${{ secrets.FB_NEWS_ACCESS_TOKEN || secrets.KV_ACCESS_TOKEN }}
         run: |
           python bot.py photo-news --publish --count 1
+
+      - name: Save State to Prevent News Duplication
+        run: |
+          git config --local user.email "bot@volt.com"
+          git config --local user.name "Volt Automation Bot"
+          git add data/
+          git diff-index --quiet HEAD || (git commit -m "chore: sync posted news state [skip ci]" && git push)
