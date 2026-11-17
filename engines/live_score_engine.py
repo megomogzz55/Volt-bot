@@ -67,7 +67,6 @@ class LiveScoreEngine:
                     competitors = comp.get("competitors", [])
                     home = next((c for c in competitors if c.get("homeAway") == "home"), {})
                     away = next((c for c in competitors if c.get("homeAway") == "away"), {})
-                    
                     events.append({
                         "id": ev.get("id"),
                         "name": ev.get("name"),
@@ -82,6 +81,74 @@ class LiveScoreEngine:
         except Exception as e:
             print("ESPN API error:", e)
         return []
+
+    def get_standings(self, league_slug="eng.1"):
+        """
+        Fetch official live league standings from ESPN API (Free, zero rate limits).
+        """
+        url = f"https://site.api.espn.com/apis/v2/sports/soccer/{league_slug}/standings"
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=15)
+            if resp.status_code == 200:
+                data = resp.json()
+                children = data.get("children", [])
+                if not children:
+                    return []
+                entries = children[0].get("standings", {}).get("entries", [])
+                table = []
+                for entry in entries:
+                    team = entry.get("team", {})
+                    stats = {s.get("name"): s.get("displayValue") for s in entry.get("stats", [])}
+                    table.append({
+                        "rank": stats.get("rank"),
+                        "team": team.get("displayName"),
+                        "short_name": team.get("shortDisplayName"),
+                        "logo": team.get("logos", [{}])[0].get("href") if team.get("logos") else None,
+                        "played": stats.get("gamesPlayed"),
+                        "wins": stats.get("wins"),
+                        "ties": stats.get("ties"),
+                        "losses": stats.get("losses"),
+                        "points": stats.get("points"),
+                        "goal_diff": stats.get("pointDifferential")
+                    })
+                return table
+        except Exception as e:
+            print(f"ESPN Standings API error: {e}")
+        return []
+
+    def format_standings_post(self, league_slug="eng.1"):
+        league_names = {
+            "eng.1": ("الدوري الإنجليزي الممتاز", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "#البريميرليج #الدوري_الانجليزي"),
+            "esp.1": ("الدوري الإسباني (الليجا)", "🇪🇸", "#الليجا #ريال_مدريد #برشلونة"),
+            "uefa.champions": ("دوري أبطال أوروبا", "🏆", "#دوري_أبطال_أوروبا #UCL"),
+            "ita.1": ("الدوري الإيطالي (الكالتشيو)", "🇮🇹", "#الكالتشيو #الدوري_الايطالي"),
+            "ger.1": ("الدوري الألماني (البوندسليجا)", "🇩🇪", "#البوندسليجا #بايرن_ميونخ")
+        }
+        info = league_names.get(league_slug, ("الدوري العام", "⚽", "#كرة_القدم"))
+        table = self.get_standings(league_slug)
+        if not table:
+            return None
+            
+        lines = [
+            f"📊 جدول ترتيب {info[0]} {info[1]} | كورة ڤولت",
+            "",
+            "إليك صراع الصدارة والمراكز الأولى بعد نهاية الجولة:",
+            ""
+        ]
+        
+        medals = {1: "🥇", 2: "🥈", 3: "🥉"}
+        for row in table[:10]:
+            r = int(row.get("rank", 99))
+            m = medals.get(r, f"{r}️⃣")
+            lines.append(f"{m} {row['team']} - {row['points']} نقطة (فارق أهداف: {row['goal_diff']}) [لعب {row['played']}]")
+            
+        lines.extend([
+            "",
+            "🔥 مين الأقرب لحسم اللقب في رأيك؟ شاركنا توقعاتك في التعليقات! 👇",
+            "",
+            f"{info[2]} #كورة_ڤولت #ترتيب_الدوري"
+        ])
+        return "\n".join(lines)
 
 if __name__ == "__main__":
     engine = LiveScoreEngine()

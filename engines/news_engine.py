@@ -68,6 +68,25 @@ class NewsEngine:
             })
             self._save_state()
 
+    def clean_title(self, raw_title):
+        clean = raw_title
+        competitors = [
+            "FilGoal", "في الجول", "يلا كورة", "يلا كوره", "يلا_كورة", "يلا_كوره",
+            "Yallakora", "yallakora", "winwin", "WinWin", "وين وين", "كووورة", "Kooora",
+            "kooora", "اليوم السابع", "كورة بلس", "بطولات", "Btolat", "سكاي نيوز",
+            "الجزيرة نت", "العربية", "بي إن سبورت", "beIN SPORTS", "beIN"
+        ]
+        # Remove trailing " - Source"
+        if " - " in clean:
+            parts = clean.rsplit(" - ", 1)
+            for comp in competitors:
+                if comp.lower() in parts[1].lower():
+                    clean = parts[0].strip()
+                    break
+        # Remove any inline competitor mentions
+        for comp in competitors:
+            clean = clean.replace(f"- {comp}", "").replace(f"| {comp}", "").strip()
+        return clean.strip()
     def is_valid_football_article(self, title, summary=""):
         full_text = f"{title} {summary}".lower()
         for excl in NON_SPORTS_EXCLUDES:
@@ -80,6 +99,10 @@ class NewsEngine:
 
     def fetch_news_stream(self, limit=20):
         queries = [
+            ("أخبار في الجول", "site:filgoal.com"),
+            ("أخبار وين وين", "site:winwin.com"),
+            ("أخبار يلا كورة", "site:yallakora.com"),
+            ("أخبار كووورة", "site:kooora.com"),
             ("ميركاتو وانتقالات", "ميركاتو كرة قدم OR انتقال لاعب OR صفقة ليفربول OR صفقة ريال مدريد"),
             ("الدوري الإنجليزي", "الدوري الإنجليزي OR مانشستر سيتي OR ليفربول OR أرسنال OR تشيلسي"),
             ("الكرة الإسبانية", "ريال مدريد OR برشلونة OR مبابي OR فينيسيوس"),
@@ -98,12 +121,8 @@ class NewsEngine:
                 feed = feedparser.parse(url)
                 for entry in feed.entries[:8]:
                     raw_title = entry.title
-                    title = raw_title
+                    title = self.clean_title(raw_title)
                     source = "كورة ڤولت"
-                    if " - " in title:
-                        parts = title.rsplit(" - ", 1)
-                        title = parts[0].strip()
-                        source = parts[1].strip()
 
                     if title in seen_titles:
                         continue
@@ -162,8 +181,6 @@ class NewsEngine:
             header,
             "",
             f"📌 {title}",
-            "",
-            f"📰 المصدر: {source}",
             "",
             f"💬 {q}",
             "",

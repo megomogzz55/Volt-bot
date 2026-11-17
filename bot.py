@@ -383,6 +383,21 @@ def cmd_fpl_price_alert(publish=False):
         print("(Dry-run: not published. Add --publish to post live)")
 
 
+def cmd_standings(league="eng.1", publish=False):
+    ls = LiveScoreEngine()
+    post = ls.format_standings_post(league)
+    if not post:
+        print("Could not generate standings post.")
+        return
+    print("\n--- [LEAGUE STANDINGS POST] ---")
+    print(post)
+    if publish:
+        print("Publishing League Standings to Kora Volt...")
+        res = post_text(post, page_key="kora_volt")
+        print("PUBLISHED SUCCESSFULLY! Post ID:", res.get("id"))
+    else:
+        print("\n(Dry-run: not published. Add --publish to post live)")
+
 def cmd_vector_goal(scorer="محمد صلاح", assister="لويس دياز", team="ليفربول", minute=34, stats="هدف رائع", publish=False):
     card_path = render_goal_card(scorer, assister, team, minute, stats)
     print(f"\nRendered Vector Goal Card: {card_path}")
@@ -443,6 +458,10 @@ def main():
     p_pr_alert = subparsers.add_parser("fpl-price-alert", help="Post evening price prediction alert")
     p_pr_alert.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
 
+    p_table = subparsers.add_parser("table", help="Fetch and post league standings table")
+    p_table.add_argument("--league", choices=["eng.1", "esp.1", "uefa.champions", "ita.1", "ger.1"], default="eng.1", help="League identifier")
+    p_table.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
+
     p_vg = subparsers.add_parser("vector-goal", help="Render Pop-Art Vector Goal & Assist Card")
     p_vg.add_argument("--scorer", default="محمد صلاح", help="Goal scorer Arabic name")
     p_vg.add_argument("--assister", default="لويس دياز", help="Assist provider Arabic name")
@@ -484,6 +503,8 @@ def main():
         cmd_fpl_differentials(publish=args.publish)
     elif args.command == "fpl-price-alert":
         cmd_fpl_price_alert(publish=args.publish)
+    elif args.command == "table":
+        cmd_standings(league=args.league, publish=args.publish)
     elif args.command == "fpl-debate":
         cmd_fpl_debate(publish=args.publish, mode=getattr(args, "mode", "debate"))
     else:
