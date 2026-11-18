@@ -1,0 +1,38 @@
+name: Fantasy Volt - EPL/UCL/World News
+
+on:
+  schedule:
+    # Every 3 hours = ~8 runs/day × 2 posts = ~16 posts/day
+    - cron: '15 */3 * * *'
+  workflow_dispatch:
+
+jobs:
+  publish_fantasy_volt_news:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Publish 2 News Posts to Fantasy Volt
+        env:
+          FB_FANTASY_PAGE_ID: ${{ secrets.FB_FANTASY_PAGE_ID }}
+          FB_FANTASY_ACCESS_TOKEN: ${{ secrets.FB_FANTASY_ACCESS_TOKEN }}
+        run: python bot.py mega-news --publish --count 2 --page fantasy_volt
+
+      - name: Save State
+        run: |
+          git config --local user.email "bot@volt.com"
+          git config --local user.name "Volt Automation Bot"
+          git add data/
+          git diff-index --quiet HEAD || (git commit -m "chore: sync fantasy news state [skip ci]" && git push)

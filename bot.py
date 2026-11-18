@@ -22,6 +22,7 @@ from engines.news_engine import NewsEngine
 from engines.photo_news_engine import PhotoNewsEngine, download_image, fetch_entity_photo
 from engines.fantasy_content_engine import FantasyContentEngine
 from engines.vector_goal_card import render_goal_card
+from engines.mega_news_engine import MegaNewsEngine
 
 def cmd_status():
     print("=" * 60)
@@ -197,6 +198,57 @@ def cmd_post_news(publish=False, count=1):
         else:
             posted_count += 1
             print("(Dry-run: not published. Add --publish to post live)")
+
+def cmd_mega_news(publish=False, count=3, page="kora_volt"):
+    """
+    Mega News Engine — rich multi-source news with images, dedup, and engagement.
+    Pages: kora_volt (all football), fantasy_volt (EPL/UCL/World Stars)
+    """
+    engine = MegaNewsEngine()
+    
+    if page == "fantasy_volt":
+        articles = engine.fetch_fantasy_volt_news(limit=count * 2)
+    else:
+        articles = engine.fetch_kora_volt_news(limit=count * 2)
+    
+    if not articles:
+        print(f"No fresh articles found for {page}.")
+        return
+    
+    posted_count = 0
+    for art in articles:
+        if posted_count >= count:
+            break
+        
+        caption = engine.format_post(art, page=page)
+        img_path = engine.download_article_image(art)
+        
+        print(f"\n{'='*60}")
+        print(f"📰 MEGA NEWS #{posted_count + 1} | {page}")
+        print(f"{'='*60}")
+        print(f"Category: {art['cat_badge']}")
+        print(f"Source: {art['source_name']}")
+        print(f"Image: {'✅ ' + img_path if img_path else '❌ Text-only'}")
+        print(f"\n{caption}")
+        
+        if publish:
+            try:
+                if img_path:
+                    res = post_photo(img_path, caption=caption, page_key=page)
+                else:
+                    res = post_text(caption, page_key=page)
+                print(f"\n✅ PUBLISHED! Post ID: {res.get('id')}")
+                engine.mark_posted(art["title"])
+                posted_count += 1
+                import time
+                if posted_count < count:
+                    time.sleep(5)  # Brief pause between posts
+            except Exception as e:
+                print(f"❌ Publish Error: {e}")
+        else:
+            engine.mark_posted(art["title"])
+            posted_count += 1
+            print("(Dry-run: add --publish to post live)")
 
 def cmd_fpl_debate(publish=False, mode="debate"):
     boot = FPLEngine().fetch_bootstrap()
@@ -462,6 +514,11 @@ def main():
     p_table.add_argument("--league", choices=["eng.1", "esp.1", "uefa.champions", "ita.1", "ger.1"], default="eng.1", help="League identifier")
     p_table.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
 
+    p_mega = subparsers.add_parser("mega-news", help="Rich multi-source news with images (Mega Engine)")
+    p_mega.add_argument("--count", type=int, default=3, help="Number of articles to post")
+    p_mega.add_argument("--page", choices=["kora_volt", "fantasy_volt"], default="kora_volt", help="Target page")
+    p_mega.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
+
     p_vg = subparsers.add_parser("vector-goal", help="Render Pop-Art Vector Goal & Assist Card")
     p_vg.add_argument("--scorer", default="محمد صلاح", help="Goal scorer Arabic name")
     p_vg.add_argument("--assister", default="لويس دياز", help="Assist provider Arabic name")
@@ -505,6 +562,8 @@ def main():
         cmd_fpl_price_alert(publish=args.publish)
     elif args.command == "table":
         cmd_standings(league=args.league, publish=args.publish)
+    elif args.command == "mega-news":
+        cmd_mega_news(publish=args.publish, count=args.count, page=args.page)
     elif args.command == "fpl-debate":
         cmd_fpl_debate(publish=args.publish, mode=getattr(args, "mode", "debate"))
     else:

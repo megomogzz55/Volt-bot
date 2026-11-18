@@ -1,13 +1,13 @@
-name: Kora Volt - Frequent Football News
+name: Kora Volt - Mega News Engine
 
 on:
   schedule:
-    # Runs every 2 hours (12 posts per day across all hours)
     - cron: '0 */2 * * *'
+    - cron: '30 1,5,9,13,17,21 * * *'
   workflow_dispatch:
 
 jobs:
-  publish_news:
+  publish_kora_volt_news:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -22,19 +22,17 @@ jobs:
           cache: 'pip'
 
       - name: Install Dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      - name: Fetch Fresh Breaking News & Publish
+      - name: Publish 3 Rich News Posts to Kora Volt
         env:
-          FB_NEWS_PAGE_ID: ${{ secrets.FB_NEWS_PAGE_ID || secrets.KV_PAGE_ID }}
-          FB_NEWS_ACCESS_TOKEN: ${{ secrets.FB_NEWS_ACCESS_TOKEN || secrets.KV_ACCESS_TOKEN }}
-        run: |
-          python bot.py photo-news --publish --count 1
+          FB_NEWS_PAGE_ID: ${{ secrets.FB_NEWS_PAGE_ID }}
+          FB_NEWS_ACCESS_TOKEN: ${{ secrets.FB_NEWS_ACCESS_TOKEN }}
+        run: python bot.py mega-news --publish --count 3 --page kora_volt
 
-      - name: Save State to Prevent News Duplication
+      - name: Save State to Prevent Duplication
         run: |
           git config --local user.email "bot@volt.com"
           git config --local user.name "Volt Automation Bot"
           git add data/
-          git diff-index --quiet HEAD || (git commit -m "chore: sync posted news state [skip ci]" && git push)
+          git diff-index --quiet HEAD || (git commit -m "chore: sync mega news state [skip ci]" && git push)
