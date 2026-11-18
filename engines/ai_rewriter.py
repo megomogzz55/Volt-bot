@@ -32,7 +32,7 @@ def _get_key(name):
 
 
 GROQ_API_KEY = _get_key("GROQ_API_KEY")
-GEMINI_API_KEY = _get_key("GEMINI_API_KEY")
+GEMINI_API_KEY = _get_key("GEMINI_API_KEY") or _get_key("GOOGLE_API_KEY")
 
 
 SYSTEM_PROMPT = """أنت محرر رياضي محترف في صفحة أخبار كرة قدم عربية.
