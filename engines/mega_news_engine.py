@@ -23,6 +23,7 @@ from datetime import datetime
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 IMG_DIR = os.path.join(BASE_DIR, "output", "news_photos")
+OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 STATE_FILE = os.path.join(DATA_DIR, "mega_news_state.json")
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(IMG_DIR, exist_ok=True)
@@ -92,6 +93,33 @@ DIRECT_RSS = [
         "type": "sports",
         "quality": "medium",
     },
+    {
+        "name": "BBC Sport",
+        "url": "https://feeds.bbci.co.uk/sport/football/rss.xml",
+        "type": "football",
+        "quality": "high",
+        "lang": "en",
+    },
+    {
+        "name": "Hespress Sport",
+        "url": "https://www.hespress.com/sport/feed",
+        "type": "football",
+        "quality": "medium",
+    },
+    {
+        "name": "ESPN Football",
+        "url": "https://www.espn.com/espn/rss/soccer/news",
+        "type": "football",
+        "quality": "medium",
+        "lang": "en",
+    },
+    {
+        "name": "Foot Mercato",
+        "url": "https://www.footmercato.net/flux-rss",
+        "type": "football",
+        "quality": "high",
+        "lang": "fr",
+    },
 ]
 
 # Google News site-specific queries (scrape their content via GN cache)
@@ -110,12 +138,18 @@ GN_TOPIC_QUERIES_FANTASY = [
     ("أرسنال", "أرسنال أخبار"),
     ("مانشستر سيتي", "مانشستر سيتي أخبار"),
     ("تشيلسي", "تشيلسي أخبار"),
+    ("مانشستر يونايتد", "مانشستر يونايتد أخبار"),
+    ("توتنهام", "توتنهام أخبار"),
+    ("نيوكاسل", "نيوكاسل يونايتد أخبار"),
     ("ريال مدريد", "ريال مدريد أخبار"),
     ("برشلونة", "برشلونة أخبار"),
     ("دوري الأبطال", "دوري أبطال أوروبا"),
     ("محمد صلاح", "محمد صلاح"),
     ("مبابي", "مبابي ريال مدريد"),
     ("هالاند", "هالاند مانشستر سيتي"),
+    ("فينيسيوس", "فينيسيوس جونيور ريال مدريد"),
+    ("يامال", "لامين يامال برشلونة"),
+    ("بالمر", "كول بالمر تشيلسي"),
 ]
 
 GN_TOPIC_QUERIES_KORA = [
@@ -126,7 +160,11 @@ GN_TOPIC_QUERIES_KORA = [
     ("يوروبا ليج", "يوروبا ليج OR الدوري الأوروبي"),
     ("الكرة الإيطالية", "الدوري الإيطالي OR إنتر ميلان OR يوفنتوس OR نابولي"),
     ("الكرة الألمانية", "البوندسليجا OR بايرن ميونخ OR دورتموند"),
+    ("الكرة الفرنسية", "الدوري الفرنسي OR باريس سان جيرمان"),
     ("كأس العالم", "كأس العالم 2026 OR مونديال"),
+    ("دوري الأمم الأوروبية", "دوري الأمم الأوروبية Nations League"),
+    ("كرة القدم عامة", "أخبار كرة القدم اليوم"),
+    ("المنتخبات العربية", "المنتخب المصري OR المنتخب السعودي OR المنتخب المغربي"),
 ]
 
 
@@ -512,6 +550,19 @@ class MegaNewsEngine:
         summary = article.get("summary", "")
         cat_id = article.get("cat_id", "general")
         badge = article.get("cat_badge", "📰 أخبار")
+        
+        # AI Rewrite: change the title & summary to be original
+        from engines.ai_rewriter import rewrite_article
+        try:
+            rewritten = rewrite_article(title, summary, cat_id)
+            if rewritten:
+                title = rewritten.get("title", title)
+                summary = rewritten.get("summary", summary)
+                article["rewritten_title"] = title  # Store for card generation
+                article["rewritten_summary"] = summary
+        except Exception as e:
+            print(f"Rewrite skipped: {e}")
+        
         question = _engagement_question(cat_id, title)
         hashtags = _smart_hashtags(title, cat_id)
 
@@ -563,3 +614,33 @@ class MegaNewsEngine:
         except Exception as e:
             print(f"Image download failed: {e}")
             return None
+
+    def generate_branded_card(self, article, page="kora_volt"):
+        """
+        Generate an original branded news card instead of using the source's image.
+        Downloads the source image as background, then renders our branded card over it.
+        Uses rewritten title/summary if available.
+        """
+        from engines.news_card_engine import render_news_card
+        
+        brand = "فانتازي ڤولت" if page == "fantasy_volt" else "كورة ڤولت"
+        cat_id = article.get("cat_id", "general")
+        # Prefer rewritten text
+        title = article.get("rewritten_title", article["title"])
+        summary = article.get("rewritten_summary", article.get("summary", ""))
+        
+        # Download source image to use as blurred background
+        bg_path = self.download_article_image(article)
+        
+        # Generate branded card
+        slug = _hash(article["title"])[:10]
+        out_path = os.path.join(OUTPUT_DIR, f"branded_{slug}.png")
+        
+        return render_news_card(
+            title=title,
+            summary=summary,
+            category=cat_id,
+            brand=brand,
+            photo_path=bg_path,
+            output_path=out_path
+        )

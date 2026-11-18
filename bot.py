@@ -201,8 +201,8 @@ def cmd_post_news(publish=False, count=1):
 
 def cmd_mega_news(publish=False, count=3, page="kora_volt"):
     """
-    Mega News Engine — rich multi-source news with images, dedup, and engagement.
-    Pages: kora_volt (all football), fantasy_volt (EPL/UCL/World Stars)
+    Mega News Engine — rich multi-source news with BRANDED CARDS, dedup, and engagement.
+    Every post gets an original designed card (not copied from source).
     """
     engine = MegaNewsEngine()
     
@@ -221,28 +221,27 @@ def cmd_mega_news(publish=False, count=3, page="kora_volt"):
             break
         
         caption = engine.format_post(art, page=page)
-        img_path = engine.download_article_image(art)
+        
+        # Generate ORIGINAL branded card (not copying source image)
+        card_path = engine.generate_branded_card(art, page=page)
         
         print(f"\n{'='*60}")
         print(f"📰 MEGA NEWS #{posted_count + 1} | {page}")
         print(f"{'='*60}")
         print(f"Category: {art['cat_badge']}")
         print(f"Source: {art['source_name']}")
-        print(f"Image: {'✅ ' + img_path if img_path else '❌ Text-only'}")
+        print(f"Card: {card_path}")
         print(f"\n{caption}")
         
         if publish:
             try:
-                if img_path:
-                    res = post_photo(img_path, caption=caption, page_key=page)
-                else:
-                    res = post_text(caption, page_key=page)
+                res = post_photo(card_path, caption=caption, page_key=page)
                 print(f"\n✅ PUBLISHED! Post ID: {res.get('id')}")
                 engine.mark_posted(art["title"])
                 posted_count += 1
                 import time
                 if posted_count < count:
-                    time.sleep(5)  # Brief pause between posts
+                    time.sleep(5)
             except Exception as e:
                 print(f"❌ Publish Error: {e}")
         else:
