@@ -48,7 +48,7 @@ SYSTEM_PROMPT = """أنت محرر رياضي محترف في صفحة أخبا�
 
 
 def rewrite_with_groq(title, summary=""):
-    """Rewrite using Groq's Llama 3.1 70B (FREE: 30 req/min)"""
+    """Rewrite using Groq's FREE LLMs (30 req/min)"""
     if not GROQ_API_KEY:
         return None
     
@@ -56,36 +56,51 @@ def rewrite_with_groq(title, summary=""):
     if summary:
         user_msg += f"\nالتفاصيل: {summary}"
     
-    payload = json.dumps({
-        "model": "llama-3.1-70b-versatile",
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_msg}
-        ],
-        "temperature": 0.7,
-        "max_tokens": 300,
-        "response_format": {"type": "json_object"},
-    }).encode("utf-8")
-    
-    req = urllib.request.Request(
-        "https://api.groq.com/openai/v1/chat/completions",
-        data=payload,
-        headers={
-            "Authorization": f"Bearer {GROQ_API_KEY}",
-            "Content-Type": "application/json",
-        },
-        method="POST"
-    )
-    
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read())
-            content = data["choices"][0]["message"]["content"]
-            result = json.loads(content)
-            return result
-    except Exception as e:
-        print(f"Groq rewrite failed: {e}")
+        import requests as _req
+    except ImportError:
         return None
+    
+    # Try models in order of quality
+    models = ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "allam-2-7b"]
+    
+    for model in models:
+        try:
+            resp = _req.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {GROQ_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": user_msg}
+                    ],
+                    "temperature": 0.7,
+                    "max_tokens": 300,
+                },
+                timeout=15
+            )
+            
+            if resp.status_code == 200:
+                content = resp.json()["choices"][0]["message"]["content"]
+                # Clean markdown code blocks if present
+                content = content.strip()
+                if content.startswith("```"):
+                    content = content.split("```")[1]
+                    if content.startswith("json"):
+                        content = content[4:]
+                content = content.strip()
+                result = json.loads(content)
+                if result.get("title"):
+                    return result
+            # If model fails, try next
+        except Exception:
+            continue
+    
+    return None
 
 
 def rewrite_with_gemini(title, summary=""):
