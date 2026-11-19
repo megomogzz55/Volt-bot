@@ -14,6 +14,7 @@ from PIL import Image
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_PATH = os.path.join(BASE_DIR, "assets", "templates", "kora_volt_bg.png")
+FONT_PATH = os.path.join(BASE_DIR, "assets", "fonts", "AraJozoor-Regular.ttf")
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 EDGE_PATH = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 
@@ -64,6 +65,11 @@ def render_template_card(
     with open(TEMPLATE_PATH, "rb") as f:
         template_b64 = base64.b64encode(f.read()).decode()
         
+    font_b64 = ""
+    if os.path.exists(FONT_PATH):
+        with open(FONT_PATH, "rb") as f:
+            font_b64 = base64.b64encode(f.read()).decode()
+            
     ext = os.path.splitext(photo_path)[1].lower()
     mime = "image/png" if ext == ".png" else "image/jpeg"
     with open(photo_path, "rb") as f:
@@ -76,11 +82,16 @@ def render_template_card(
 <head>
 <meta charset="UTF-8">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&display=swap');
+@font-face {{
+  font-family: 'Jozor';
+  src: url(data:font/truetype;charset=utf-8;base64,{font_b64}) format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}}
 * {{ margin:0; padding:0; box-sizing:border-box; }}
 body {{
   width: 1350px; height: 1688px;
-  font-family: 'Cairo', sans-serif;
+  font-family: 'Jozor', 'Cairo', sans-serif;
   overflow: hidden; position: relative;
   background: #000;
 }}
@@ -102,51 +113,64 @@ body {{
   pointer-events: none;
 }}
 
-/* 3. TEXT ON TOP (Source/Speaker + Headline ONLY) */
-.text-layer {{
+/* 3. HEADLINE IN SHADOW AREA */
+.headline-container {{
   position: absolute;
   left: 0; right: 0;
-  top: 1120px;
+  top: 1190px;
   z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 0 60px;
-}}
-
-.source-tag {{
-  font-size: 34px;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 35px;
+  padding: 0 50px;
 }}
 
 .headline-1 {{
-  font-size: 60px;
-  font-weight: 900;
+  font-size: 64px;
   color: #ffffff;
-  line-height: 1.25;
-  margin-bottom: 20px;
+  line-height: 1.35;
+  margin-bottom: 22px;
+  -webkit-text-stroke: 1.2px #ffffff;
   text-shadow: 0 4px 20px rgba(0,0,0,0.9);
 }}
 
 .headline-2 {{
-  font-size: 60px;
-  font-weight: 900;
+  font-size: 64px;
   color: #ffffff;
-  line-height: 1.25;
+  line-height: 1.35;
+  -webkit-text-stroke: 1.2px #ffffff;
   text-shadow: 0 4px 20px rgba(0,0,0,0.9);
+}}
+
+/* 4. SPEAKER AT THE BOTTOM (Above the lightning bolts, like reference) */
+.speaker-container {{
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 95px;
+  z-index: 3;
+  text-align: center;
+}}
+
+.speaker-tag {{
+  font-size: 34px;
+  color: #ffffff;
+  -webkit-text-stroke: 0.5px #ffffff;
+  letter-spacing: 0.5px;
 }}
 </style>
 </head>
 <body>
   <div class="photo-layer"></div>
   <div class="template-overlay"></div>
-  <div class="text-layer">
-    <div class="source-tag">{source_tag}</div>
+  
+  <div class="headline-container">
     <div class="headline-1">{l1}</div>
     {"<div class='headline-2'>" + l2 + "</div>" if l2 else ""}
+  </div>
+  
+  <div class="speaker-container">
+    <div class="speaker-tag">{source_tag}</div>
   </div>
 </body>
 </html>"""
