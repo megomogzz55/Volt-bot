@@ -601,16 +601,13 @@ class MegaNewsEngine:
         if not img_url:
             return None
             
-        # Optimize image URL for maximum resolution
+        # Optimize image URL for maximum resolution where supported
         if "skynewsarabia.com" in img_url:
             img_url = re.sub(r'/\d+/\d+/', '/1920/1080/', img_url)
         elif "france24.com" in img_url:
             img_url = re.sub(r'/w:\d+/p:16x9/', '/w:1920/p:16x9/', img_url)
         elif "russiatoday.com" in img_url:
             img_url = img_url.replace('/thumbnail/', '/original/')
-        elif "winwin.com" in img_url and "/styles/fps_" in img_url:
-            # Try to get larger winwin image
-            img_url = re.sub(r'/styles/fps_\d+x\d+/public/', '/styles/open_graph/public/', img_url)
             
         slug = _hash(article["title"])[:10]
         ext = "jpg"
@@ -629,105 +626,129 @@ class MegaNewsEngine:
                     return None
                 with open(dest, "wb") as f:
                     f.write(data)
+                    
+            # Enhance image resolution and sharpness for crisp template rendering
+            try:
+                from PIL import Image, ImageEnhance
+                with Image.open(dest) as im:
+                    if im.width < 1200:
+                        scale = 1400 / im.width
+                        new_h = int(im.height * scale)
+                        im_hd = im.resize((1400, new_h), Image.Resampling.LANCZOS)
+                        im_hd = ImageEnhance.Sharpness(im_hd).enhance(1.2)
+                        im_hd.convert("RGB").save(dest, "JPEG", quality=95)
+            except Exception as enh_e:
+                pass  # Fall back to raw downloaded file
+                
             return dest
         except Exception as e:
             print(f"Image download failed: {e}")
             return None
 
     def _extract_source_attribution(self, article):
-        """Format speaker or source with role (e.g. 'الصحفي فابريزيو رومانو', 'المدرب أنشيلوتي', 'شبكة سكاي سبورتس')"""
+        """
+        Returns (role, name) tuple.
+        role: in electric blue above (e.g. 'الصحفي', 'صحيفة', 'اللاعب', 'المدرب', 'شبكة', 'نادي')
+        name: in white below (e.g. 'فابريزيو رومانو', 'ماركا الإسبانية', 'واين روني')
+        """
         title = article.get("title", "")
         summary = article.get("summary", "")
         source = article.get("source_name", "") or article.get("source", "") or ""
         text = f"{title} {summary} {source}"
         
+        def _has(word, txt):
+            # Safe full word boundary match
+            p = rf'(?:^|[^\w\u0600-\u06FF]){re.escape(word)}(?:[^\w\u0600-\u06FF]|$)'
+            return bool(re.search(p, txt, re.IGNORECASE))
+        
         # 1. Journalists
         journalists = {
-            "فابريزيو": "الصحفي فابريزيو رومانو",
-            "رومانو": "الصحفي فابريزيو رومانو",
-            "أورنستين": "الصحفي ديفيد أورنستين",
-            "بليتنبرغ": "الصحفي فلوريان بليتنبرغ",
-            "موريتو": "الصحفي ماتيو موريتو",
+            "فابريزيو": ("الصحفي", "فابريزيو رومانو"),
+            "رومانو": ("الصحفي", "فابريزيو رومانو"),
+            "أورنستين": ("الصحفي", "ديفيد أورنستين"),
+            "بليتنبرغ": ("الصحفي", "فلوريان بليتنبرغ"),
+            "موريتو": ("الصحفي", "ماتيو موريتو"),
         }
-        for k, v in journalists.items():
-            if k in text:
-                return v
+        for k, (r, n) in journalists.items():
+            if _has(k, text):
+                return r, n
                 
         # 2. Coaches
         coaches = {
-            "جوارديولا": "المدرب بيب جوارديولا",
-            "أنشيلوتي": "المدرب كارلو أنشيلوتي",
-            "أرتيتا": "المدرب ميكيل أرتيتا",
-            "كلوب": "المدرب يورغن كلوب",
-            "سلوت": "المدرب آرني سلوت",
-            "مورينيو": "المدرب جوزيه مورينيو",
-            "سكالوني": "المدرب ليونيل سكالوني",
-            "تشابي ألونسو": "المدرب تشابي ألونسو",
-            "إنريكي": "المدرب لويس إنريكي",
+            "جوارديولا": ("المدرب", "بيب جوارديولا"),
+            "أنشيلوتي": ("المدرب", "كارلو أنشيلوتي"),
+            "أرتيتا": ("المدرب", "ميكيل أرتيتا"),
+            "كلوب": ("المدرب", "يورغن كلوب"),
+            "سلوت": ("المدرب", "آرني سلوت"),
+            "مورينيو": ("المدرب", "جوزيه مورينيو"),
+            "سكالوني": ("المدرب", "ليونيل سكالوني"),
+            "تشابي ألونسو": ("المدرب", "تشابي ألونسو"),
+            "إنريكي": ("المدرب", "لويس إنريكي"),
         }
-        for k, v in coaches.items():
-            if k in text:
-                return v
+        for k, (r, n) in coaches.items():
+            if _has(k, text):
+                return r, n
                 
         # 3. Media outlets & Newspapers
         media = {
-            "ماركا": "صحيفة ماركا الإسبانية",
-            "آس": "صحيفة آس الإسبانية",
-            "بيلد": "صحيفة بيلد الألمانية",
-            "ليكيب": "صحيفة ليكيب الفرنسية",
-            "ذا أثلتيك": "صحيفة ذا أثلتيك",
-            "athletic": "صحيفة ذا أثلتيك",
-            "سكاي": "شبكة سكاي سبورتس",
-            "sky": "شبكة سكاي سبورتس",
-            "بي إن": "شبكة بي إن سبورتس",
-            "bein": "شبكة بي إن سبورتس",
-            "فرانس 24": "شبكة فرانس 24",
-            "france24": "شبكة فرانس 24",
-            "وين وين": "منصة وين وين الرياضية",
-            "winwin": "منصة وين وين الرياضية",
-            "هسبريس": "صحيفة هسبريس",
-            "hespress": "صحيفة هسبريس",
-            "رويترز": "وكالة رويترز",
-            "reuters": "وكالة رويترز",
-            "rt": "شبكة RT",
+            "ماركا": ("صحيفة", "ماركا الإسبانية"),
+            "آس": ("صحيفة", "آس الإسبانية"),
+            "بيلد": ("صحيفة", "بيلد الألمانية"),
+            "ليكيب": ("صحيفة", "ليكيب الفرنسية"),
+            "ذا أثلتيك": ("صحيفة", "ذا أثلتيك"),
+            "athletic": ("صحيفة", "ذا أثلتيك"),
+            "سكاي": ("شبكة", "سكاي سبورتس"),
+            "sky": ("شبكة", "سكاي سبورتس"),
+            "بي إن": ("شبكة", "بي إن سبورتس"),
+            "bein": ("شبكة", "بي إن سبورتس"),
+            "فرانس 24": ("شبكة", "فرانس 24"),
+            "france24": ("شبكة", "فرانس 24"),
+            "وين وين": ("منصة", "وين وين الرياضية"),
+            "winwin": ("منصة", "وين وين الرياضية"),
+            "هسبريس": ("صحيفة", "هسبريس"),
+            "hespress": ("صحيفة", "هسبريس"),
+            "رويترز": ("وكالة", "رويترز"),
+            "reuters": ("وكالة", "رويترز"),
+            "rt": ("شبكة", "RT العربية"),
         }
-        for k, v in media.items():
-            if k in text.lower():
-                return v
+        for k, (r, n) in media.items():
+            if _has(k, text):
+                return r, n
                 
         # 4. Players
         players = {
-            "روني": "اللاعب واين روني",
-            "صلاح": "اللاعب محمد صلاح",
-            "ميسي": "اللاعب ليونيل ميسي",
-            "رونالدو": "اللاعب كريستيانو رونالدو",
-            "مبابي": "اللاعب كيليان مبابي",
-            "هالاند": "اللاعب إيرلينغ هالاند",
-            "مودريتش": "اللاعب لوكا مودريتش",
-            "ماتا": "اللاعب خوان ماتا",
-            "إيدرسون": "اللاعب إيدرسون مورايس",
+            "روني": ("اللاعب", "واين روني"),
+            "صلاح": ("اللاعب", "محمد صلاح"),
+            "ميسي": ("اللاعب", "ليونيل ميسي"),
+            "رونالدو": ("اللاعب", "كريستيانو رونالدو"),
+            "مبابي": ("اللاعب", "كيليان مبابي"),
+            "هالاند": ("اللاعب", "إيرلينغ هالاند"),
+            "مودريتش": ("اللاعب", "لوكا مودريتش"),
+            "ماتا": ("اللاعب", "خوان ماتا"),
+            "إيدرسون": ("اللاعب", "إيدرسون مورايس"),
+            "بيرانوند": ("اللاعب", "علي رضا بيرانوند"),
         }
-        for k, v in players.items():
-            if k in text:
-                return v
+        for k, (r, n) in players.items():
+            if _has(k, text):
+                return r, n
                 
         # 5. Clubs
         clubs = {
-            "ريال مدريد": "نادي ريال مدريد",
-            "برشلونة": "نادي برشلونة",
-            "مانشستر سيتي": "نادي مانشستر سيتي",
-            "مانشستر يونايتد": "نادي مانشستر يونايتد",
-            "ليفربول": "نادي ليفربول",
-            "أرسنال": "نادي أرسنال",
-            "بايرن ميونخ": "نادي بايرن ميونخ",
+            "ريال مدريد": ("نادي", "ريال مدريد"),
+            "برشلونة": ("نادي", "برشلونة"),
+            "مانشستر سيتي": ("نادي", "مانشستر سيتي"),
+            "مانشستر يونايتد": ("نادي", "مانشستر يونايتد"),
+            "ليفربول": ("نادي", "ليفربول"),
+            "أرسنال": ("نادي", "أرسنال"),
+            "بايرن ميونخ": ("نادي", "بايرن ميونخ"),
         }
-        for k, v in clubs.items():
-            if k in text:
-                return v
+        for k, (r, n) in clubs.items():
+            if _has(k, text):
+                return r, n
                 
         if source:
-            return f"المصدر {source}"
-        return "المصدر كورة ڤولت"
+            return "المصدر", source
+        return "المصدر", "كورة ڤولت"
 
     def generate_branded_card(self, article, page="kora_volt"):
         """
@@ -739,7 +760,7 @@ class MegaNewsEngine:
         
         # Prefer rewritten title
         title = article.get("rewritten_title", article["title"])
-        source_tag = self._extract_source_attribution(article)
+        source_role, source_name = self._extract_source_attribution(article)
         
         slug = _hash(article["title"])[:10]
         out_path = os.path.join(OUTPUT_DIR, f"branded_{slug}.png")
@@ -752,7 +773,8 @@ class MegaNewsEngine:
                 return render_template_card(
                     photo_path=photo_path,
                     headline=title,
-                    source_tag=source_tag,
+                    source_role=source_role,
+                    source_name=source_name,
                     output_filename=f"branded_{slug}.png"
                 )
             except Exception as e:

@@ -35,7 +35,9 @@ def _split_headline_two_lines(headline: str) -> tuple:
 def render_template_card(
     photo_path: str,
     headline: str,
-    source_tag: str,
+    source_tag: str = "",
+    source_role: str = "",
+    source_name: str = "",
     output_filename: str = "template_card.png",
     photo_focus: str = "center 15%"
 ) -> str:
@@ -43,12 +45,15 @@ def render_template_card(
     Renders a news card using the exact official Kora Volt template layout:
     - Photo sits UNDER the template (full-bleed, natural shading from template gradient)
     - Shaded template on top (Logo + black gradient shadow + bottom lightning)
-    - Speaker/source name + headline ONLY.
+    - Headline in shadow area (Jozor bold)
+    - Source role (in electric blue) ABOVE Source name (in white) at the bottom.
     
     Args:
         photo_path: Path to the article/player photo.
         headline: Main news headline in Arabic.
-        source_tag: Name of the speaker or source (e.g. 'الصحفي فابريزيو رومانو', 'رسميًا 🔴').
+        source_tag: Combined source tag or fallback.
+        source_role: The role (e.g. 'الصحفي', 'صحيفة', 'اللاعب', 'المدرب', 'شبكة', 'نادي') in electric blue.
+        source_name: The name (e.g. 'فابريزيو رومانو', 'ماركا الإسبانية') in white.
         output_filename: Filename for output PNG.
         photo_focus: CSS background-position for photo framing (default 'center 15%').
         
@@ -62,6 +67,14 @@ def render_template_card(
     if not os.path.exists(photo_path):
         raise FileNotFoundError(f"Photo not found at: {photo_path}")
         
+    # If source_role and source_name not given, attempt to split source_tag
+    if not source_role and not source_name:
+        parts = source_tag.strip().split(maxsplit=1)
+        if len(parts) == 2 and parts[0] in ["الصحفي", "صحيفة", "اللاعب", "المدرب", "شبكة", "نادي", "منصة", "وكالة", "المصدر"]:
+            source_role, source_name = parts[0], parts[1]
+        else:
+            source_role, source_name = "", source_tag
+
     with open(TEMPLATE_PATH, "rb") as f:
         template_b64 = base64.b64encode(f.read()).decode()
         
@@ -76,6 +89,13 @@ def render_template_card(
         photo_b64 = base64.b64encode(f.read()).decode()
         
     l1, l2 = _split_headline_two_lines(headline)
+    
+    # Speaker HTML block: role in blue above name in white
+    if source_role and source_name:
+        speaker_html = f"""<div class="speaker-role">{source_role}</div>
+      <div class="speaker-name">{source_name}</div>"""
+    else:
+        speaker_html = f"""<div class="speaker-name">{source_name or source_tag}</div>"""
     
     html = f"""<!DOCTYPE html>
 <html dir="rtl" lang="ar">
@@ -143,17 +163,30 @@ body {{
   text-shadow: 0 4px 20px rgba(0,0,0,0.9);
 }}
 
-/* 4. SPEAKER AT THE BOTTOM (Above the lightning bolts, like reference) */
+/* 4. SPEAKER AT THE BOTTOM: ROLE IN BLUE ABOVE NAME IN WHITE */
 .speaker-container {{
   position: absolute;
   left: 0; right: 0;
-  bottom: 95px;
+  bottom: 85px;
   z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
 }}
 
-.speaker-tag {{
-  font-size: 34px;
+.speaker-role {{
+  font-size: 26px;
+  font-weight: 700;
+  color: #00b4d8;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  text-shadow: 0 0 12px rgba(0, 180, 216, 0.4);
+}}
+
+.speaker-name {{
+  font-size: 36px;
+  font-weight: 700;
   color: #ffffff;
   -webkit-text-stroke: 0.5px #ffffff;
   letter-spacing: 0.5px;
@@ -170,7 +203,7 @@ body {{
   </div>
   
   <div class="speaker-container">
-    <div class="speaker-tag">{source_tag}</div>
+    {speaker_html}
   </div>
 </body>
 </html>"""
