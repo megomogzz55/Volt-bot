@@ -147,7 +147,7 @@ body {{
 }}
 
 .headline-1 {{
-  font-size: 64px;
+  font-size: 68px;
   color: #ffffff;
   line-height: 1.35;
   margin-bottom: 22px;
@@ -156,7 +156,7 @@ body {{
 }}
 
 .headline-2 {{
-  font-size: 64px;
+  font-size: 68px;
   color: #ffffff;
   line-height: 1.35;
   -webkit-text-stroke: 1.2px #ffffff;
@@ -176,7 +176,7 @@ body {{
 }}
 
 .speaker-role {{
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 700;
   color: #00b4d8;
   letter-spacing: 1px;
@@ -185,7 +185,7 @@ body {{
 }}
 
 .speaker-name {{
-  font-size: 36px;
+  font-size: 38px;
   font-weight: 700;
   color: #ffffff;
   -webkit-text-stroke: 0.5px #ffffff;

@@ -689,7 +689,7 @@ class MegaNewsEngine:
             if _has(k, text):
                 return r, n
                 
-        # 3. Media outlets & Newspapers
+        # 3. Media outlets & Global Newspapers (International only - NO Arabic competitors)
         media = {
             "ماركا": ("صحيفة", "ماركا الإسبانية"),
             "آس": ("صحيفة", "آس الإسبانية"),
@@ -703,10 +703,6 @@ class MegaNewsEngine:
             "bein": ("شبكة", "بي إن سبورتس"),
             "فرانس 24": ("شبكة", "فرانس 24"),
             "france24": ("شبكة", "فرانس 24"),
-            "وين وين": ("منصة", "وين وين الرياضية"),
-            "winwin": ("منصة", "وين وين الرياضية"),
-            "هسبريس": ("صحيفة", "هسبريس"),
-            "hespress": ("صحيفة", "هسبريس"),
             "رويترز": ("وكالة", "رويترز"),
             "reuters": ("وكالة", "رويترز"),
             "rt": ("شبكة", "RT العربية"),
@@ -727,12 +723,14 @@ class MegaNewsEngine:
             "ماتا": ("اللاعب", "خوان ماتا"),
             "إيدرسون": ("اللاعب", "إيدرسون مورايس"),
             "بيرانوند": ("اللاعب", "علي رضا بيرانوند"),
+            "الدوسري": ("اللاعب", "سالم الدوسري"),
+            "مرموش": ("اللاعب", "عمر مرموش"),
         }
         for k, (r, n) in players.items():
             if _has(k, text):
                 return r, n
                 
-        # 5. Clubs
+        # 5. Clubs (Arab & Global)
         clubs = {
             "ريال مدريد": ("نادي", "ريال مدريد"),
             "برشلونة": ("نادي", "برشلونة"),
@@ -741,56 +739,57 @@ class MegaNewsEngine:
             "ليفربول": ("نادي", "ليفربول"),
             "أرسنال": ("نادي", "أرسنال"),
             "بايرن ميونخ": ("نادي", "بايرن ميونخ"),
+            "الزمالك": ("نادي", "الزمالك"),
+            "الأهلي": ("نادي", "الأهلي"),
+            "بيراميدز": ("نادي", "بيراميدز"),
+            "الهلال": ("نادي", "الهلال السعودي"),
+            "النصر": ("نادي", "النصر السعودي"),
+            "الاتحاد": ("نادي", "الاتحاد السعودي"),
+            "مولودية الجزائر": ("نادي", "مولودية الجزائر"),
+            "الترجي": ("نادي", "الترجي التونسي"),
+            "الوداد": ("نادي", "الوداد الرياضي"),
+            "الرجاء": ("نادي", "الرجاء الرياضي"),
         }
         for k, (r, n) in clubs.items():
             if _has(k, text):
                 return r, n
                 
-        if source:
+        # Filter out Arabic competitors completely
+        banned = ["winwin", "وين وين", "hespress", "هسبريس", "filgoal", "في الجول",
+                  "yallakora", "يلا كورة", "يلاكورة", "kooora", "كووورة", "koraplus",
+                  "كورة بلس", "btolat", "بطولات", "youm7", "اليوم السابع"]
+        if source and not any(b in source.lower() for b in banned):
             return "المصدر", source
+            
         return "المصدر", "كورة ڤولت"
 
     def generate_branded_card(self, article, page="kora_volt"):
         """
         Generate an original branded news card using Kora Volt's official shaded template.
         Places high-resolution article photo under the template, with headline and speaker/source at the bottom.
+        Guaranteed to ALWAYS use the official shaded template (never Pillow card).
         """
         # Download high-res source image to place under the template
         photo_path = self.download_article_image(article)
+        
+        # If download failed or missing, use high-res default sports background
+        default_bg = os.path.join(BASE_DIR, "assets", "templates", "default_football_bg.jpg")
+        if not photo_path or not os.path.exists(photo_path):
+            photo_path = default_bg
         
         # Prefer rewritten title
         title = article.get("rewritten_title", article["title"])
         source_role, source_name = self._extract_source_attribution(article)
         
         slug = _hash(article["title"])[:10]
-        out_path = os.path.join(OUTPUT_DIR, f"branded_{slug}.png")
+        out_filename = f"branded_{slug}.png"
         
-        # If we have photo and template, use official template engine
-        template_file = os.path.join(BASE_DIR, "assets", "templates", "kora_volt_bg.png")
-        if photo_path and os.path.exists(template_file):
-            try:
-                from engines.template_card_engine import render_template_card
-                return render_template_card(
-                    photo_path=photo_path,
-                    headline=title,
-                    source_role=source_role,
-                    source_name=source_name,
-                    output_filename=f"branded_{slug}.png"
-                )
-            except Exception as e:
-                print(f"Template card render failed ({e}), falling back to standard...")
-        
-        # Fallback to news_card_engine
-        from engines.news_card_engine import render_news_card
-        brand = "فانتازي ڤولت" if page == "fantasy_volt" else "كورة ڤولت"
-        cat_id = article.get("cat_id", "general")
-        summary = article.get("rewritten_summary", article.get("summary", ""))
-        
-        return render_news_card(
-            title=title,
-            summary=summary,
-            category=cat_id,
-            brand=brand,
+        # Render using the official shaded template engine
+        from engines.template_card_engine import render_template_card
+        return render_template_card(
             photo_path=photo_path,
-            output_path=out_path
+            headline=title,
+            source_role=source_role,
+            source_name=source_name,
+            output_filename=out_filename
         )
