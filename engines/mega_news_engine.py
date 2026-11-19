@@ -624,30 +624,44 @@ class MegaNewsEngine:
 
     def generate_branded_card(self, article, page="kora_volt"):
         """
-        Generate an original branded news card instead of using the source's image.
-        Downloads the source image as background, then renders our branded card over it.
-        Uses rewritten title/summary if available.
+        Generate an original branded news card using Kora Volt's official shaded template.
+        Places article photo under the template, with source/speaker and headline on top.
         """
-        from engines.news_card_engine import render_news_card
+        # Download source image to place under the template
+        photo_path = self.download_article_image(article)
         
-        brand = "فانتازي ڤولت" if page == "fantasy_volt" else "كورة ڤولت"
-        cat_id = article.get("cat_id", "general")
-        # Prefer rewritten text
+        # Prefer rewritten title
         title = article.get("rewritten_title", article["title"])
-        summary = article.get("rewritten_summary", article.get("summary", ""))
+        source_tag = article.get("source") or "عاجل 🔴"
         
-        # Download source image to use as blurred background
-        bg_path = self.download_article_image(article)
-        
-        # Generate branded card
         slug = _hash(article["title"])[:10]
         out_path = os.path.join(OUTPUT_DIR, f"branded_{slug}.png")
+        
+        # If we have photo and template, use official template engine
+        template_file = os.path.join(BASE_DIR, "assets", "templates", "kora_volt_bg.png")
+        if photo_path and os.path.exists(template_file):
+            try:
+                from engines.template_card_engine import render_template_card
+                return render_template_card(
+                    photo_path=photo_path,
+                    headline=title,
+                    source_tag=source_tag,
+                    output_filename=f"branded_{slug}.png"
+                )
+            except Exception as e:
+                print(f"Template card render failed ({e}), falling back to standard...")
+        
+        # Fallback to news_card_engine
+        from engines.news_card_engine import render_news_card
+        brand = "فانتازي ڤولت" if page == "fantasy_volt" else "كورة ڤولت"
+        cat_id = article.get("cat_id", "general")
+        summary = article.get("rewritten_summary", article.get("summary", ""))
         
         return render_news_card(
             title=title,
             summary=summary,
             category=cat_id,
             brand=brand,
-            photo_path=bg_path,
+            photo_path=photo_path,
             output_path=out_path
         )
