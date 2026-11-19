@@ -784,12 +784,30 @@ class MegaNewsEngine:
         slug = _hash(article["title"])[:10]
         out_filename = f"branded_{slug}.png"
         
-        # Render using the official shaded template engine
-        from engines.template_card_engine import render_template_card
-        return render_template_card(
-            photo_path=photo_path,
-            headline=title,
-            source_role=source_role,
-            source_name=source_name,
-            output_filename=out_filename
+        # Decide template: Template #2 for statements / quotes / manchettes, Template #1 for breaking / general
+        cat_id = article.get("cat_id", "")
+        is_statement = (
+            cat_id in ["quotes", "interviews", "statements"]
+            or any(w in title for w in ["صرح", "قال", "يؤكد", "يكشف", "اعتراف", "يوضح", "رسالة", "يفتح النار", "يتحدث"])
+            or "«" in title or '"' in title
         )
+        
+        from engines.template_card_engine import render_template_card, render_statement_card
+        
+        if is_statement:
+            text_to_show = f"«{title}»" if "«" not in title else title
+            return render_statement_card(
+                photo_path=photo_path,
+                statement_text=text_to_show,
+                source_role=source_role,
+                source_name=source_name,
+                output_filename=out_filename
+            )
+        else:
+            return render_template_card(
+                photo_path=photo_path,
+                headline=title,
+                source_role=source_role,
+                source_name=source_name,
+                output_filename=out_filename
+            )
