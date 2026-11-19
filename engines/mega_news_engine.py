@@ -596,10 +596,22 @@ class MegaNewsEngine:
     # ─── Image Download ───
 
     def download_article_image(self, article):
-        """Download the article's image to local disk, return path or None"""
+        """Download the article's image to local disk in highest available quality, return path or None"""
         img_url = article.get("image_url")
         if not img_url:
             return None
+            
+        # Optimize image URL for maximum resolution
+        if "skynewsarabia.com" in img_url:
+            img_url = re.sub(r'/\d+/\d+/', '/1920/1080/', img_url)
+        elif "france24.com" in img_url:
+            img_url = re.sub(r'/w:\d+/p:16x9/', '/w:1920/p:16x9/', img_url)
+        elif "russiatoday.com" in img_url:
+            img_url = img_url.replace('/thumbnail/', '/original/')
+        elif "winwin.com" in img_url and "/styles/fps_" in img_url:
+            # Try to get larger winwin image
+            img_url = re.sub(r'/styles/fps_\d+x\d+/public/', '/styles/open_graph/public/', img_url)
+            
         slug = _hash(article["title"])[:10]
         ext = "jpg"
         if ".png" in img_url.lower():
@@ -622,17 +634,112 @@ class MegaNewsEngine:
             print(f"Image download failed: {e}")
             return None
 
+    def _extract_source_attribution(self, article):
+        """Format speaker or source with role (e.g. 'الصحفي فابريزيو رومانو', 'المدرب أنشيلوتي', 'شبكة سكاي سبورتس')"""
+        title = article.get("title", "")
+        summary = article.get("summary", "")
+        source = article.get("source_name", "") or article.get("source", "") or ""
+        text = f"{title} {summary} {source}"
+        
+        # 1. Journalists
+        journalists = {
+            "فابريزيو": "الصحفي فابريزيو رومانو",
+            "رومانو": "الصحفي فابريزيو رومانو",
+            "أورنستين": "الصحفي ديفيد أورنستين",
+            "بليتنبرغ": "الصحفي فلوريان بليتنبرغ",
+            "موريتو": "الصحفي ماتيو موريتو",
+        }
+        for k, v in journalists.items():
+            if k in text:
+                return v
+                
+        # 2. Coaches
+        coaches = {
+            "جوارديولا": "المدرب بيب جوارديولا",
+            "أنشيلوتي": "المدرب كارلو أنشيلوتي",
+            "أرتيتا": "المدرب ميكيل أرتيتا",
+            "كلوب": "المدرب يورغن كلوب",
+            "سلوت": "المدرب آرني سلوت",
+            "مورينيو": "المدرب جوزيه مورينيو",
+            "سكالوني": "المدرب ليونيل سكالوني",
+            "تشابي ألونسو": "المدرب تشابي ألونسو",
+            "إنريكي": "المدرب لويس إنريكي",
+        }
+        for k, v in coaches.items():
+            if k in text:
+                return v
+                
+        # 3. Media outlets & Newspapers
+        media = {
+            "ماركا": "صحيفة ماركا الإسبانية",
+            "آس": "صحيفة آس الإسبانية",
+            "بيلد": "صحيفة بيلد الألمانية",
+            "ليكيب": "صحيفة ليكيب الفرنسية",
+            "ذا أثلتيك": "صحيفة ذا أثلتيك",
+            "athletic": "صحيفة ذا أثلتيك",
+            "سكاي": "شبكة سكاي سبورتس",
+            "sky": "شبكة سكاي سبورتس",
+            "بي إن": "شبكة بي إن سبورتس",
+            "bein": "شبكة بي إن سبورتس",
+            "فرانس 24": "شبكة فرانس 24",
+            "france24": "شبكة فرانس 24",
+            "وين وين": "منصة وين وين الرياضية",
+            "winwin": "منصة وين وين الرياضية",
+            "هسبريس": "صحيفة هسبريس",
+            "hespress": "صحيفة هسبريس",
+            "رويترز": "وكالة رويترز",
+            "reuters": "وكالة رويترز",
+            "rt": "شبكة RT",
+        }
+        for k, v in media.items():
+            if k in text.lower():
+                return v
+                
+        # 4. Players
+        players = {
+            "روني": "اللاعب واين روني",
+            "صلاح": "اللاعب محمد صلاح",
+            "ميسي": "اللاعب ليونيل ميسي",
+            "رونالدو": "اللاعب كريستيانو رونالدو",
+            "مبابي": "اللاعب كيليان مبابي",
+            "هالاند": "اللاعب إيرلينغ هالاند",
+            "مودريتش": "اللاعب لوكا مودريتش",
+            "ماتا": "اللاعب خوان ماتا",
+            "إيدرسون": "اللاعب إيدرسون مورايس",
+        }
+        for k, v in players.items():
+            if k in text:
+                return v
+                
+        # 5. Clubs
+        clubs = {
+            "ريال مدريد": "نادي ريال مدريد",
+            "برشلونة": "نادي برشلونة",
+            "مانشستر سيتي": "نادي مانشستر سيتي",
+            "مانشستر يونايتد": "نادي مانشستر يونايتد",
+            "ليفربول": "نادي ليفربول",
+            "أرسنال": "نادي أرسنال",
+            "بايرن ميونخ": "نادي بايرن ميونخ",
+        }
+        for k, v in clubs.items():
+            if k in text:
+                return v
+                
+        if source:
+            return f"المصدر {source}"
+        return "المصدر كورة ڤولت"
+
     def generate_branded_card(self, article, page="kora_volt"):
         """
         Generate an original branded news card using Kora Volt's official shaded template.
-        Places article photo under the template, with source/speaker and headline on top.
+        Places high-resolution article photo under the template, with headline and speaker/source at the bottom.
         """
-        # Download source image to place under the template
+        # Download high-res source image to place under the template
         photo_path = self.download_article_image(article)
         
         # Prefer rewritten title
         title = article.get("rewritten_title", article["title"])
-        source_tag = article.get("source") or "عاجل 🔴"
+        source_tag = self._extract_source_attribution(article)
         
         slug = _hash(article["title"])[:10]
         out_path = os.path.join(OUTPUT_DIR, f"branded_{slug}.png")
