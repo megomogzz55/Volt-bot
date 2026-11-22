@@ -658,13 +658,14 @@ class MegaNewsEngine:
         if os.path.exists(dest):
             return dest
         try:
-            req = urllib.request.Request(img_url, headers=UA)
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = resp.read()
-                if len(data) < 2000:  # Too small, likely broken
-                    return None
+            import requests
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+            resp = requests.get(img_url, headers=headers, timeout=15)
+            if resp.status_code == 200 and len(resp.content) > 2000:
                 with open(dest, "wb") as f:
-                    f.write(data)
+                    f.write(resp.content)
+            else:
+                return None
                     
             # Enhance image resolution and sharpness for crisp template rendering
             try:

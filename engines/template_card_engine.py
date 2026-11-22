@@ -200,7 +200,7 @@ body {{
 }}
 
 .headline-1 {{
-  font-size: 68px;
+  font-size: 74px;
   color: #ffffff;
   line-height: 1.35;
   margin-bottom: 22px;
@@ -209,7 +209,7 @@ body {{
 }}
 
 .headline-2 {{
-  font-size: 68px;
+  font-size: 74px;
   color: #ffffff;
   line-height: 1.35;
   -webkit-text-stroke: 1.2px #ffffff;
@@ -229,7 +229,7 @@ body {{
 }}
 
 .speaker-role {{
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
   color: #00b4d8;
   letter-spacing: 1px;
@@ -238,7 +238,7 @@ body {{
 }}
 
 .speaker-name {{
-  font-size: 38px;
+  font-size: 44px;
   font-weight: 700;
   color: #ffffff;
   -webkit-text-stroke: 0.5px #ffffff;
@@ -281,17 +281,42 @@ body {{
     raise RuntimeError("Failed to render card with Headless Browser")
 
 
+def _format_vertical_manchette(text: str, target_lines: int = 7) -> str:
+    """
+    Splits text into approximately target_lines (6-8) balanced vertical lines,
+    ensuring it occupies the full vertical height of Template #2 without any empty gaps.
+    """
+    words = text.strip().split()
+    if len(words) <= 5:
+        return text
+    import math
+    words_per_line = max(2, math.ceil(len(words) / target_lines))
+    lines = []
+    curr = []
+    for w in words:
+        curr.append(w)
+        if len(curr) >= words_per_line:
+            lines.append(" ".join(curr))
+            curr = []
+    if curr:
+        if len(lines) > 0 and len(curr) == 1:
+            lines[-1] += " " + curr[0]
+        else:
+            lines.append(" ".join(curr))
+    return "<br>".join(lines)
+
+
 def render_statement_card(
     photo_path: str,
     statement_text: str,
     source_role: str = "الصحفي",
     source_name: str = "فابريزيو رومانو",
     output_filename: str = "statement_card.png",
-    photo_focus: str = "left 20%"
+    photo_focus: str = "65% center"
 ) -> str:
     """
     Renders Template #2 (Manchettes, Statements, Quotes & Interviews):
-    - Real full-size photo spans across the ENTIRE canvas under the template.
+    - Real full-size photo properly centered in the left transparent window (65% center).
     - Shaded horizontal gradient overlay to black on the right + 2 icons at top right.
     - Big, tall, multi-line Jozor font in the right column filling the vertical height (y = 700 to 2050).
     - Speaker role in electric blue above Speaker name in white at bottom right.
@@ -317,21 +342,9 @@ def render_statement_card(
     with open(photo_path, "rb") as f:
         photo_b64 = base64.b64encode(f.read()).decode()
         
-    # Dynamic font sizing based on length to fill the vertical space like reference
-    text_len = len(statement_text)
-    if text_len <= 80:
-        font_size = "80px"
-        line_height = "1.7"
-    elif text_len <= 130:
-        font_size = "74px"
-        line_height = "1.65"
-    elif text_len <= 180:
-        font_size = "68px"
-        line_height = "1.6"
-    else:
-        font_size = "60px"
-        line_height = "1.55"
-        
+    # Format text into 6-8 vertical lines so it occupies the full vertical height like reference
+    formatted_statement = _format_vertical_manchette(statement_text, target_lines=7)
+    
     html = f"""<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -351,7 +364,7 @@ body {{
   background: #000;
 }}
 
-/* 1. FULL-SIZE PHOTO ACROSS ENTIRE CANVAS UNDER TEMPLATE */
+/* 1. FULL-SIZE PHOTO CENTERED IN THE LEFT HALF UNDER TEMPLATE */
 .full-photo {{
   position: absolute;
   inset: 0;
@@ -371,10 +384,10 @@ body {{
 /* 3. TALL, BIG HEADLINE / STATEMENT ON THE RIGHT (Filling vertical height) */
 .headline-container {{
   position: absolute;
-  top: 720px;
-  left: 1180px;
-  right: 80px;
-  height: 1350px;
+  top: 700px;
+  left: 1140px;
+  right: 60px;
+  height: 1420px;
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -384,21 +397,20 @@ body {{
 }}
 
 .headline-text {{
-  font-size: {font_size};
+  font-size: 86px;
   color: #ffffff;
-  line-height: {line_height};
+  line-height: 1.65;
   -webkit-text-stroke: 1.5px #ffffff;
-  text-shadow: 0 4px 25px rgba(0,0,0,0.95);
-  max-width: 900px;
-  letter-spacing: 0.5px;
+  text-shadow: 0 4px 25px rgba(0,0,0,0.98);
+  max-width: 920px;
 }}
 
 /* 4. SPEAKER AT THE BOTTOM RIGHT */
 .speaker-container {{
   position: absolute;
-  bottom: 120px;
-  left: 1180px;
-  right: 80px;
+  bottom: 110px;
+  left: 1140px;
+  right: 60px;
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -407,26 +419,26 @@ body {{
 }}
 
 .speaker-role {{
-  font-size: 34px;
+  font-size: 38px;
   font-weight: 700;
   color: #00b4d8;
   letter-spacing: 2px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   text-shadow: 0 0 15px rgba(0, 180, 216, 0.5);
 }}
 
 .speaker-name {{
-  font-size: 50px;
+  font-size: 56px;
   font-weight: 700;
   color: #ffffff;
   -webkit-text-stroke: 1px #ffffff;
   letter-spacing: 0.5px;
-  text-shadow: 0 4px 15px rgba(0,0,0,0.9);
+  text-shadow: 0 4px 15px rgba(0,0,0,0.95);
 }}
 </style>
 </head>
 <body>
-  <!-- Full-size photo across entire canvas -->
+  <!-- Full-size photo properly framed on the left -->
   <div class="full-photo"></div>
   
   <!-- Shaded template overlay with icons -->
@@ -434,7 +446,7 @@ body {{
   
   <!-- Tall, impactful headline occupying vertical height -->
   <div class="headline-container">
-    <div class="headline-text">{statement_text}</div>
+    <div class="headline-text">{formatted_statement}</div>
   </div>
   
   <!-- Speaker at bottom right -->
