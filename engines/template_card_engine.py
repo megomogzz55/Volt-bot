@@ -85,6 +85,8 @@ def _split_headline_two_lines(headline: str) -> tuple:
     return line1, line2
 
 
+from engines.template_registry import get_template
+
 def render_template_card(
     photo_path: str,
     headline: str,
@@ -92,7 +94,8 @@ def render_template_card(
     source_role: str = "",
     source_name: str = "",
     output_filename: str = "template_card.png",
-    photo_focus: str = "center 15%"
+    photo_focus: str = "center 15%",
+    page: str = "kora_volt"
 ) -> str:
     """
     Renders a news card using the exact official Kora Volt template layout:
@@ -128,7 +131,8 @@ def render_template_card(
         else:
             source_role, source_name = "", source_tag
 
-    with open(TEMPLATE_PATH, "rb") as f:
+    tmpl_file = get_template(page=page, card_type="breaking")
+    with open(tmpl_file, "rb") as f:
         template_b64 = base64.b64encode(f.read()).decode()
         
     font_b64 = ""
@@ -312,7 +316,8 @@ def render_statement_card(
     source_role: str = "الصحفي",
     source_name: str = "فابريزيو رومانو",
     output_filename: str = "statement_card.png",
-    photo_focus: str = "65% center"
+    photo_focus: str = "65% center",
+    page: str = "kora_volt"
 ) -> str:
     """
     Renders Template #2 (Manchettes, Statements, Quotes & Interviews):
@@ -323,7 +328,7 @@ def render_statement_card(
     """
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
-    tmpl_file = STATEMENT_TEMPLATE_PATH if os.path.exists(STATEMENT_TEMPLATE_PATH) else TEMPLATE_PATH
+    tmpl_file = get_template(page=page, card_type="manchette")
     if not os.path.exists(tmpl_file):
         raise FileNotFoundError(f"Template not found at: {tmpl_file}")
     if not os.path.exists(photo_path):

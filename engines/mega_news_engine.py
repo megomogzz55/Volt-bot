@@ -854,7 +854,8 @@ class MegaNewsEngine:
                 statement_text=text_to_show,
                 source_role=source_role,
                 source_name=source_name,
-                output_filename=out_filename
+                output_filename=out_filename,
+                page=page
             )
         else:
             return render_template_card(
@@ -862,5 +863,6 @@ class MegaNewsEngine:
                 headline=title,
                 source_role=source_role,
                 source_name=source_name,
-                output_filename=out_filename
+                output_filename=out_filename,
+                page=page
             )
