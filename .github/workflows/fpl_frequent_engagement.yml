@@ -45,7 +45,7 @@ jobs:
         run: |
           python -c "
           import random, subprocess
-          choices = ['fpl-quiz', 'fpl-facts', 'fpl-picks', 'fpl-differentials', 'fpl-price-alert']
+          choices = ['fpl-quiz', 'fpl-facts', 'fpl-picks', 'fpl-differentials', 'fpl-price-alert', 'fpl-xg']
           cmd = random.choice(choices)
           print('Selected Auto Command:', cmd)
           subprocess.run(['python', 'bot.py', cmd, '--publish'], check=True)

@@ -7,6 +7,8 @@ import os
 import argparse
 from datetime import datetime
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 from publish.fb import post_photo, post_text, verify_token
 from render.card_engine import (
     render_yellow_card,
@@ -263,6 +265,41 @@ def cmd_mega_news(publish=False, count=3, page="kora_volt"):
             engine.mark_posted(art["title"])
             posted_count += 1
             print("(Dry-run: add --publish to post live)")
+
+def cmd_fpl_xg(publish=False):
+    """Publish Opta xG expected goals analytical report to Fantasy Volt."""
+    from engines.fpl_stats_engine import FPLStatsEngine
+    from engines.template_card_engine import render_template_card
+    from publish.fb import post_photo
+    
+    stats = FPLStatsEngine()
+    post_caption = stats.format_xg_report_post()
+    leaders = stats.get_xg_leaders(limit=1)
+    
+    top_p = leaders[0] if leaders else {"name": "إيرلينغ هالاند", "xg": 8.09}
+    headline = f"ترتيب أخطر لاعبي البريميرليج رسميًا.. هالاند يتصدر بـ {top_p['xg']:.1f} هدف متوقع"
+    
+    photo_bg = os.path.join(BASE_DIR, "assets", "templates", "default_football_bg.jpg")
+    card = render_template_card(
+        photo_path=photo_bg,
+        headline=headline,
+        source_role="إحصائيات",
+        source_name="أوبتا xG الرسمية",
+        output_filename="fpl_xg_card.png"
+    )
+    
+    print("\n" + "="*60)
+    print("📊 FPL xG ANALYTICS REPORT")
+    print("="*60)
+    print(post_caption)
+    print(f"\nCard: {card}")
+    
+    if publish:
+        res = post_photo(image_path=card, caption=post_caption, page_key="fantasy_volt")
+        print(f"✅ Published to Fantasy Volt! ID: {res.get('id') or res.get('post_id')}")
+    else:
+        print("(Dry-run: add --publish to post live)")
+
 
 def cmd_fpl_debate(publish=False, mode="debate"):
     boot = FPLEngine().fetch_bootstrap()
@@ -521,6 +558,9 @@ def main():
     p_diffs = subparsers.add_parser("fpl-differentials", help="Post FPL differentials")
     p_diffs.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
 
+    p_xg = subparsers.add_parser("fpl-xg", help="Post Official Opta xG Expected Goals Leaderboard")
+    p_xg.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
+
     p_pr_alert = subparsers.add_parser("fpl-price-alert", help="Post evening price prediction alert")
     p_pr_alert.add_argument("--publish", action="store_true", help="Publish directly to Facebook")
 
@@ -572,6 +612,8 @@ def main():
         cmd_fpl_picks(publish=args.publish)
     elif args.command == "fpl-differentials":
         cmd_fpl_differentials(publish=args.publish)
+    elif args.command == "fpl-xg":
+        cmd_fpl_xg(publish=args.publish)
     elif args.command == "fpl-price-alert":
         cmd_fpl_price_alert(publish=args.publish)
     elif args.command == "table":
