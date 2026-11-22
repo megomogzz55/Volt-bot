@@ -106,7 +106,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 18px;
+            padding: 0 16px;
             z-index: 100;
         }
 
@@ -148,6 +148,42 @@
             padding: 2px 6px;
             border-radius: 4px;
             font-weight: 800;
+        }
+
+        /* UNDO / REDO GROUP */
+        .history-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2px 4px;
+        }
+
+        .hist-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            padding: 5px 9px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .hist-btn:hover:not(:disabled) {
+            background: var(--bg-card);
+            color: var(--cyan);
+        }
+
+        .hist-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
         }
 
         .topbar-center {
@@ -781,6 +817,12 @@
             </div>
         </div>
 
+        <!-- UNDO & REDO CONTROLS -->
+        <div class="history-group">
+            <button class="hist-btn" id="btnUndo" title="تراجع (Ctrl+Z)">↶ تراجع</button>
+            <button class="hist-btn" id="btnRedo" title="تقدم (Ctrl+Y)">↷ تقدم</button>
+        </div>
+
         <div class="topbar-center">
             <div class="preset-pill-group">
                 <button class="preset-pill active" data-preset="kora_breaking">⚡ قالب العاجل</button>
@@ -803,17 +845,18 @@
         <!-- SIDEBAR CONTROLS (RIGHT) -->
         <aside class="sidebar">
             <nav class="nav-tabs">
-                <button class="nav-tab active" data-target="panel-text">✍️ تخصيص الجمل والنصوص</button>
+                <button class="nav-tab active" data-target="panel-text">✍️ الجمل والنصوص</button>
+                <button class="nav-tab" data-target="panel-source">🏷️ المصدر والمتحدث</button>
                 <button class="nav-tab" data-target="panel-bg">🖼️ الصورة والخلفية</button>
                 <button class="nav-tab" data-target="panel-vector">👤 اللاعب والفيكتور</button>
                 <button class="nav-tab" data-target="panel-template">🎨 القالب والشعار</button>
             </nav>
 
-            <!-- TAB 1: INDEPENDENT SENTENCE & TYPOGRAPHY CUSTOMIZER -->
+            <!-- TAB 1: INDEPENDENT SENTENCE CUSTOMIZER -->
             <div class="panel-body active" id="panel-text">
                 <div class="box">
                     <div class="box-header">
-                        <span class="box-title">اختر الجملة لتعديلها بشكل منفصل</span>
+                        <span class="box-title">اختر الجملة لتعديلها وتحريكها بشكل منفصل</span>
                         <button class="btn-add-layer" id="btnAddSentence">➕ إضافة جملة جديدة</button>
                     </div>
                     <div class="layers-strip" id="sentenceLayersStrip">
@@ -897,9 +940,9 @@
                         <div class="slider-item">
                             <div class="slider-header">
                                 <span>الموقع الرأسي (Y)</span>
-                                <span class="slider-val" id="valSentY">1240px</span>
+                                <span class="slider-val" id="valSentY">1180px</span>
                             </div>
-                            <input type="range" id="sentY" min="0" max="2700" value="1240">
+                            <input type="range" id="sentY" min="0" max="2700" value="1180">
                         </div>
                     </div>
 
@@ -935,39 +978,28 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- SOURCE & SPEAKER SPECIAL BOX -->
+            <!-- TAB 2: INDEPENDENT SOURCE & SPEAKER CUSTOMIZER -->
+            <div class="panel-body" id="panel-source">
+                <!-- SPEAKER ROLE (الصفة) -->
                 <div class="box">
                     <div class="box-header">
-                        <span class="box-title">المصدر والمتحدث (Speaker Role & Name)</span>
+                        <span class="box-title">1. صفة المتحدث / المصدر (Role)</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="roleVisible" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
                     </div>
 
                     <div class="grid-2">
                         <div>
-                            <label>صفة المتحدث (الصحفي / المدرب):</label>
-                            <input type="text" id="roleText" value="الصحفي">
+                            <label>نص الصفة:</label>
+                            <input type="text" id="roleText" value="الصحفي" placeholder="الصحفي / المدرب...">
                         </div>
                         <div>
-                            <label>لون الصفة:</label>
-                            <input type="color" id="roleColor" value="#00b4d8">
-                        </div>
-                    </div>
-
-                    <div class="grid-2">
-                        <div>
-                            <label>اسم المصدر / المتحدث:</label>
-                            <input type="text" id="nameText" value="فابريزيو رومانو">
-                        </div>
-                        <div>
-                            <label>لون الاسم:</label>
-                            <input type="color" id="nameColor" value="#ffffff">
-                        </div>
-                    </div>
-
-                    <div class="grid-2">
-                        <div>
-                            <label>خط المتحدث:</label>
-                            <select id="sourceFont">
+                            <label>نوع الخط:</label>
+                            <select id="roleFont">
                                 <option value="AraJozoor" selected>Jozoor (جذور)</option>
                                 <option value="Ebhaar">Ebhaar (إبهار)</option>
                                 <option value="Horizon">Horizon (هورايزون)</option>
@@ -976,18 +1008,110 @@
                                 <option value="ZuumeRough">Zuume Rough Bold</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div class="grid-3">
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <span>حجم الخط</span>
+                                <span class="slider-val" id="valRoleSize">38px</span>
+                            </div>
+                            <input type="range" id="roleSize" min="16" max="90" value="38">
+                        </div>
+                        <div>
+                            <label>لون النص:</label>
+                            <input type="color" id="roleColor" value="#00b4d8">
+                        </div>
+                        <div>
+                            <label>لون التحديد:</label>
+                            <input type="color" id="roleStrokeColor" value="#000000">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <span>الموقع الأفقي (X)</span>
+                                <span class="slider-val" id="valRoleX">675px</span>
+                            </div>
+                            <input type="range" id="roleX" min="0" max="2160" value="675">
+                        </div>
                         <div class="slider-item">
                             <div class="slider-header">
                                 <span>الموقع الرأسي (Y)</span>
-                                <span class="slider-val" id="valSourceY">1540px</span>
+                                <span class="slider-val" id="valRoleY">1485px</span>
                             </div>
-                            <input type="range" id="sourceY" min="300" max="2650" value="1540">
+                            <input type="range" id="roleY" min="0" max="2700" value="1485">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SPEAKER NAME (الاسم) -->
+                <div class="box">
+                    <div class="box-header">
+                        <span class="box-title">2. اسم المتحدث / المؤسسة (Speaker Name)</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="nameVisible" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="grid-2">
+                        <div>
+                            <label>نص الاسم:</label>
+                            <input type="text" id="nameText" value="فابريزيو رومانو" placeholder="اسم المصدر...">
+                        </div>
+                        <div>
+                            <label>نوع الخط:</label>
+                            <select id="nameFont">
+                                <option value="AraJozoor" selected>Jozoor (جذور)</option>
+                                <option value="Ebhaar">Ebhaar (إبهار)</option>
+                                <option value="Horizon">Horizon (هورايزون)</option>
+                                <option value="DroidKufi">Droid Arabic Kufi</option>
+                                <option value="LavaPro">Lava Pro Grunge</option>
+                                <option value="ZuumeRough">Zuume Rough Bold</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid-3">
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <span>حجم الخط</span>
+                                <span class="slider-val" id="valNameSize">56px</span>
+                            </div>
+                            <input type="range" id="nameSize" min="20" max="120" value="56">
+                        </div>
+                        <div>
+                            <label>لون النص:</label>
+                            <input type="color" id="nameColor" value="#ffffff">
+                        </div>
+                        <div>
+                            <label>لون التحديد:</label>
+                            <input type="color" id="nameStrokeColor" value="#000000">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <span>الموقع الأفقي (X)</span>
+                                <span class="slider-val" id="valNameX">675px</span>
+                            </div>
+                            <input type="range" id="nameX" min="0" max="2160" value="675">
+                        </div>
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <span>الموقع الرأسي (Y)</span>
+                                <span class="slider-val" id="valNameY">1540px</span>
+                            </div>
+                            <input type="range" id="nameY" min="0" max="2700" value="1540">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 2: BACKGROUND IMAGE CONTROLS -->
+            <!-- TAB 3: BACKGROUND IMAGE CONTROLS -->
             <div class="panel-body" id="panel-bg">
                 <div class="box">
                     <div class="box-header">
@@ -1002,7 +1126,7 @@
                         <span class="box-title">✨ توليد خلفية رياضية AI بـ FLUX</span>
                     </div>
                     <input type="text" id="promptAiBg" value="football stadium pitch under dark dramatic floodlights, cinematic 4k sports background">
-                    <button class="btn btn-primary" id="btnGenerateAiBg" style="width:100%; justify-content:center;">⚡ توليد فوري مجاني (2.5 ثانية)</button>
+                    <button class="btn btn-primary" id="btnGenerateAiBg" style="width:100%; justify-content:center;">⚡ توليد فوري مجاني (Pollinations FLUX)</button>
                 </div>
 
                 <div class="box">
@@ -1014,7 +1138,7 @@
 
                 <div class="box">
                     <div class="box-header">
-                        <span class="box-title">تحكم كامل في أبعاد ومكان وتأثير الصورة</span>
+                        <span class="box-title">تحكم كامل في حركة وأبعاد وتأثير الصورة</span>
                     </div>
                     <div class="slider-item">
                         <div class="slider-header">
@@ -1026,14 +1150,14 @@
                     <div class="grid-2">
                         <div class="slider-item">
                             <div class="slider-header">
-                                <span>تحريك أفقي (X)</span>
+                                <span>تحريك أفقي (Pan X)</span>
                                 <span class="slider-val" id="valBgPanX">0px</span>
                             </div>
                             <input type="range" id="bgPanX" min="-1000" max="1000" value="0">
                         </div>
                         <div class="slider-item">
                             <div class="slider-header">
-                                <span>تحريك رأسي (Y)</span>
+                                <span>تحريك رأسي (Pan Y)</span>
                                 <span class="slider-val" id="valBgPanY">0px</span>
                             </div>
                             <input type="range" id="bgPanY" min="-1000" max="1000" value="0">
@@ -1055,10 +1179,17 @@
                             <input type="range" id="bgContrast" min="50" max="200" value="100">
                         </div>
                     </div>
+                    <div class="slider-item">
+                        <div class="slider-header">
+                            <span>زاوية الدوران (Rotation)</span>
+                            <span class="slider-val" id="valBgRotation">0°</span>
+                        </div>
+                        <input type="range" id="bgRotation" min="-45" max="45" value="0">
+                    </div>
                 </div>
             </div>
 
-            <!-- TAB 3: PLAYER VECTOR & CUTOUT CONTROLS -->
+            <!-- TAB 4: PLAYER VECTOR & CUTOUT CONTROLS -->
             <div class="panel-body" id="panel-vector">
                 <div class="box">
                     <div class="box-header">
@@ -1092,7 +1223,7 @@
 
                 <div class="box">
                     <div class="box-header">
-                        <span class="box-title">تخصيص مكان وحجم وتأثيرات اللاعب</span>
+                        <span class="box-title">تخصيص مكان وحجم وحركة وتأثيرات اللاعب</span>
                     </div>
                     <div class="grid-2">
                         <div class="slider-item">
@@ -1110,21 +1241,45 @@
                             <input type="range" id="vecY" min="-200" max="2500" value="450">
                         </div>
                     </div>
-                    <div class="slider-item">
-                        <div class="slider-header">
-                            <span>الحجم والتكبير (Scale)</span>
-                            <span class="slider-val" id="valVecScale">100%</span>
+                    <div class="grid-2">
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <span>الحجم والتكبير (Scale)</span>
+                                <span class="slider-val" id="valVecScale">100%</span>
+                            </div>
+                            <input type="range" id="vecScale" min="20" max="300" value="100">
                         </div>
-                        <input type="range" id="vecScale" min="20" max="300" value="100">
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <span>زاوية الدوران (Rotation)</span>
+                                <span class="slider-val" id="valVecRot">0°</span>
+                            </div>
+                            <input type="range" id="vecRot" min="-180" max="180" value="0">
+                        </div>
                     </div>
+
                     <div class="grid-2">
                         <label><input type="checkbox" id="chkVecFlip"> عكس اتجاه اللاعب (Flip H)</label>
                         <label><input type="checkbox" id="chkVecShadow" checked> ظل واقعي (Drop Shadow)</label>
                     </div>
+
+                    <div class="grid-2">
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <span>توهج نيون (Glow)</span>
+                                <span class="slider-val" id="valVecGlow">0px</span>
+                            </div>
+                            <input type="range" id="vecGlow" min="0" max="60" value="0">
+                        </div>
+                        <div>
+                            <label>لون التوهج:</label>
+                            <input type="color" id="vecGlowColor" value="#00d2ff">
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- TAB 4: TEMPLATE OVERLAY -->
+            <!-- TAB 5: TEMPLATE OVERLAY -->
             <div class="panel-body" id="panel-template">
                 <div class="box">
                     <div class="box-header">
@@ -1169,7 +1324,7 @@
                 </div>
 
                 <div class="workspace-tools">
-                    <span style="font-size:11px; color:var(--cyan);">💡 يمكنك سحب أي جملة أو اللاعب مباشرة بالماوس على الكارت!</span>
+                    <span style="font-size:11px; color:var(--cyan);">💡 انقر واسحب أي جملة أو صفة أو اسم أو اللاعب مباشرة بالماوس!</span>
                     <label style="margin:0; display:flex; align-items:center; gap:5px; cursor:pointer;">
                         <input type="checkbox" id="chkRefOverlay"> مقارنة بالمرجع
                     </label>
@@ -1245,7 +1400,7 @@
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // MULTI-ELEMENT STATE (INDEPENDENT SENTENCES & LAYERS)
+        // APPLICATION STATE
         // ═══════════════════════════════════════════════════════════════════
 
         const state = {
@@ -1292,15 +1447,25 @@
             ],
             activeSentenceIndex: 0,
 
-            // Source & Speaker Credits
+            // Source & Speaker Credits (Independent Role & Name)
             source: {
                 roleText: "الصحفي",
                 roleColor: "#00b4d8",
+                roleStrokeColor: "#000000",
+                roleFont: "AraJozoor",
+                roleSize: 38,
+                roleX: 675,
+                roleY: 1485,
+                roleVisible: true,
+
                 nameText: "فابريزيو رومانو",
                 nameColor: "#ffffff",
-                font: "AraJozoor",
-                y: 1540,
-                x: 675
+                nameStrokeColor: "#000000",
+                nameFont: "AraJozoor",
+                nameSize: 56,
+                nameX: 675,
+                nameY: 1540,
+                nameVisible: true
             },
 
             // Background Layer
@@ -1310,7 +1475,8 @@
                 panX: 0,
                 panY: 0,
                 brightness: 1.0,
-                contrast: 1.0
+                contrast: 1.0,
+                rotation: 0
             },
 
             // Player Vector Layer
@@ -1320,8 +1486,11 @@
                 x: 350,
                 y: 450,
                 scale: 1.0,
+                rotation: 0,
                 flip: false,
-                shadow: true
+                shadow: true,
+                glow: 0,
+                glowColor: "#00d2ff"
             },
 
             // Template Overlay Layer
@@ -1330,10 +1499,10 @@
                 opacity: 1.0
             },
 
-            // Dragging tracking
+            // Interactive Dragging tracking
             drag: {
                 isDragging: false,
-                target: null, // 'sentence' or 'vector'
+                target: null, // 'sentence', 'role', 'name', 'vector', 'bg'
                 targetIndex: 0,
                 startX: 0,
                 startY: 0,
@@ -1344,14 +1513,90 @@
             ref: { show: false, img: null, opacity: 0.5 }
         };
 
+        // ═══════════════════════════════════════════════════════════════════
+        // UNDO / REDO HISTORY ENGINE
+        // ═══════════════════════════════════════════════════════════════════
+
+        const history = [];
+        let historyIndex = -1;
+        const MAX_HISTORY = 40;
+
+        function recordHistory() {
+            // Deep clone state (excluding large runtime objects)
+            const snapshot = JSON.stringify({
+                width: state.width,
+                height: state.height,
+                sentences: state.sentences,
+                activeSentenceIndex: state.activeSentenceIndex,
+                source: state.source,
+                bg: state.bg,
+                vector: state.vector,
+                template: state.template
+            });
+
+            // If we are somewhere in the middle of history, discard future
+            if (historyIndex < history.length - 1) {
+                history.splice(historyIndex + 1);
+            }
+
+            history.push(snapshot);
+            if (history.length > MAX_HISTORY) {
+                history.shift();
+            }
+            historyIndex = history.length - 1;
+
+            updateHistoryButtons();
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                applyHistorySnapshot(history[historyIndex]);
+                showToast("↶ تراجع");
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                applyHistorySnapshot(history[historyIndex]);
+                showToast("↷ تقدم");
+            }
+        }
+
+        function applyHistorySnapshot(jsonStr) {
+            const data = JSON.parse(jsonStr);
+            state.width = data.width;
+            state.height = data.height;
+            state.sentences = data.sentences;
+            state.activeSentenceIndex = Math.min(data.activeSentenceIndex, state.sentences.length - 1);
+            state.source = data.source;
+            state.bg = data.bg;
+            state.vector = data.vector;
+            state.template = data.template;
+
+            rebuildSentenceStrip();
+            loadActiveSentenceIntoInputs();
+            loadSourceInputs();
+            loadBgInputs();
+            loadVectorInputs();
+            render();
+            updateHistoryButtons();
+        }
+
+        function updateHistoryButtons() {
+            document.getElementById('btnUndo').disabled = historyIndex <= 0;
+            document.getElementById('btnRedo').disabled = historyIndex >= history.length - 1;
+        }
+
         const PRESETS = {
             kora_breaking: {
                 width: 1350,
                 height: 1688,
                 templateUrl: '/assets/templates/kora_volt/breaking.png',
                 vectorShow: false,
-                sourceRoleY: 1540,
-                sourceAlign: 'center',
+                roleX: 675, roleY: 1485,
+                nameX: 675, nameY: 1540,
                 sentences: [
                     {
                         id: "sent_1",
@@ -1394,8 +1639,8 @@
                 height: 2700,
                 templateUrl: '/assets/templates/kora_volt/manchette.png',
                 vectorShow: false,
-                sourceRoleY: 2420,
-                sourceAlign: 'right',
+                roleX: 1450, roleY: 2360,
+                nameX: 1450, nameY: 2420,
                 sentences: [
                     {
                         id: "sent_1",
@@ -1421,8 +1666,8 @@
                 height: 1688,
                 templateUrl: '/assets/templates/kora_volt/breaking.png',
                 vectorShow: true,
-                sourceRoleY: 1540,
-                sourceAlign: 'center',
+                roleX: 675, roleY: 1485,
+                nameX: 675, nameY: 1540,
                 sentences: [
                     {
                         id: "sent_1",
@@ -1513,7 +1758,14 @@
                     const h = bgImg.height * scale;
                     const x = (state.width - w) / 2 + state.bg.panX;
                     const y = (state.height - h) / 2 + state.bg.panY;
-                    ctx.drawImage(bgImg, x, y, w, h);
+
+                    if (state.bg.rotation) {
+                        ctx.translate(state.width / 2, state.height / 2);
+                        ctx.rotate((state.bg.rotation * Math.PI) / 180);
+                        ctx.drawImage(bgImg, -w / 2 + state.bg.panX, -h / 2 + state.bg.panY, w, h);
+                    } else {
+                        ctx.drawImage(bgImg, x, y, w, h);
+                    }
                     ctx.restore();
                 }
             }
@@ -1528,18 +1780,24 @@
                     const vx = state.vector.x;
                     const vy = state.vector.y;
 
-                    if (state.vector.shadow) {
+                    // Glow effect
+                    if (state.vector.glow > 0) {
+                        ctx.shadowColor = state.vector.glowColor || "#00d2ff";
+                        ctx.shadowBlur = state.vector.glow;
+                    } else if (state.vector.shadow) {
                         ctx.shadowColor = "rgba(0, 0, 0, 0.85)";
                         ctx.shadowBlur = 35;
                         ctx.shadowOffsetY = 15;
                     }
-                    if (state.vector.flip) {
-                        ctx.translate(vx + vw, vy);
-                        ctx.scale(-1, 1);
-                        ctx.drawImage(vecImg, 0, 0, vw, vh);
-                    } else {
-                        ctx.drawImage(vecImg, vx, vy, vw, vh);
+
+                    ctx.translate(vx + vw / 2, vy + vh / 2);
+                    if (state.vector.rotation) {
+                        ctx.rotate((state.vector.rotation * Math.PI) / 180);
                     }
+                    if (state.vector.flip) {
+                        ctx.scale(-1, 1);
+                    }
+                    ctx.drawImage(vecImg, -vw / 2, -vh / 2, vw, vh);
                     ctx.restore();
                 }
             }
@@ -1558,7 +1816,7 @@
             // 4. Render All Independent Sentences
             renderAllSentences();
 
-            // 5. Source Credits Block
+            // 5. Source Credits Block (Independent Role & Name)
             renderSourceBlock();
 
             // 6. Ref Overlay
@@ -1622,9 +1880,9 @@
                     ctx.fillText(line, sent.x, y);
                 });
 
-                // Highlight active sentence with a subtle boundary box on canvas
+                // Active sentence dashed selection box
                 if (idx === state.activeSentenceIndex) {
-                    ctx.strokeStyle = "rgba(0, 210, 255, 0.5)";
+                    ctx.strokeStyle = "rgba(0, 210, 255, 0.6)";
                     ctx.lineWidth = 2;
                     ctx.setLineDash([6, 6]);
                     const estHeight = lines.length * lineH;
@@ -1639,34 +1897,38 @@
         }
 
         function renderSourceBlock() {
-            const role = (state.source.roleText || '').trim();
-            const name = (state.source.nameText || '').trim();
-            if (!role && !name) return;
+            const s = state.source;
 
-            ctx.save();
-            ctx.direction = "rtl";
-            ctx.font = `38px '${state.source.font}', 'Cairo', sans-serif`;
+            // 1. Role Text (الصفة)
+            if (s.roleVisible && s.roleText.trim()) {
+                ctx.save();
+                ctx.direction = "rtl";
+                ctx.textAlign = "center";
+                ctx.font = `${s.roleSize}px '${s.roleFont}', 'Cairo', sans-serif`;
 
-            const activeP = document.querySelector('.preset-pill.active');
-            const isManchette = activeP && activeP.dataset.preset === 'kora_manchette';
-            const align = isManchette ? 'right' : 'center';
-            ctx.textAlign = align;
-
-            if (role) {
-                ctx.fillStyle = state.source.roleColor;
-                ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+                ctx.shadowColor = "rgba(0, 0, 0, 0.85)";
                 ctx.shadowBlur = 8;
-                ctx.fillText(role, state.source.x, state.source.y - 48);
+
+                ctx.fillStyle = s.roleColor;
+                ctx.fillText(s.roleText.trim(), s.roleX, s.roleY);
+                ctx.restore();
             }
 
-            if (name) {
-                ctx.font = `56px '${state.source.font}', 'Cairo', sans-serif`;
-                ctx.fillStyle = state.source.nameColor;
-                ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+            // 2. Name Text (اسم المتحدث)
+            if (s.nameVisible && s.nameText.trim()) {
+                ctx.save();
+                ctx.direction = "rtl";
+                ctx.textAlign = "center";
+                ctx.font = `${s.nameSize}px '${s.nameFont}', 'Cairo', sans-serif`;
+
+                ctx.shadowColor = "rgba(0, 0, 0, 0.95)";
                 ctx.shadowBlur = 10;
-                ctx.fillText(name, state.source.x, state.source.y);
+                ctx.shadowOffsetY = 3;
+
+                ctx.fillStyle = s.nameColor;
+                ctx.fillText(s.nameText.trim(), s.nameX, s.nameY);
+                ctx.restore();
             }
-            ctx.restore();
         }
 
         function updateZoom() {
@@ -1686,7 +1948,7 @@
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // SENTENCE LAYER MANAGER & STRIP
+        // UI INPUTS SYNCING
         // ═══════════════════════════════════════════════════════════════════
 
         function rebuildSentenceStrip() {
@@ -1733,7 +1995,66 @@
             document.getElementById('sentVisible').checked = sent.visible;
         }
 
-        function saveInputsIntoActiveSentence() {
+        function loadSourceInputs() {
+            const s = state.source;
+            document.getElementById('roleText').value = s.roleText;
+            document.getElementById('roleColor').value = s.roleColor;
+            document.getElementById('roleFont').value = s.roleFont;
+            document.getElementById('roleSize').value = s.roleSize;
+            document.getElementById('valRoleSize').textContent = `${s.roleSize}px`;
+            document.getElementById('roleX').value = s.roleX;
+            document.getElementById('valRoleX').textContent = `${s.roleX}px`;
+            document.getElementById('roleY').value = s.roleY;
+            document.getElementById('valRoleY').textContent = `${s.roleY}px`;
+            document.getElementById('roleVisible').checked = s.roleVisible;
+
+            document.getElementById('nameText').value = s.nameText;
+            document.getElementById('nameColor').value = s.nameColor;
+            document.getElementById('nameFont').value = s.nameFont;
+            document.getElementById('nameSize').value = s.nameSize;
+            document.getElementById('valNameSize').textContent = `${s.nameSize}px`;
+            document.getElementById('nameX').value = s.nameX;
+            document.getElementById('valNameX').textContent = `${s.nameX}px`;
+            document.getElementById('nameY').value = s.nameY;
+            document.getElementById('valNameY').textContent = `${s.nameY}px`;
+            document.getElementById('nameVisible').checked = s.nameVisible;
+        }
+
+        function loadBgInputs() {
+            const b = state.bg;
+            document.getElementById('bgScale').value = Math.round(b.scale * 100);
+            document.getElementById('valBgScale').textContent = `${Math.round(b.scale * 100)}%`;
+            document.getElementById('bgPanX').value = b.panX;
+            document.getElementById('valBgPanX').textContent = `${b.panX}px`;
+            document.getElementById('bgPanY').value = b.panY;
+            document.getElementById('valBgPanY').textContent = `${b.panY}px`;
+            document.getElementById('bgBrightness').value = Math.round(b.brightness * 100);
+            document.getElementById('valBgBrightness').textContent = `${Math.round(b.brightness * 100)}%`;
+            document.getElementById('bgContrast').value = Math.round(b.contrast * 100);
+            document.getElementById('valBgContrast').textContent = `${Math.round(b.contrast * 100)}%`;
+            document.getElementById('bgRotation').value = b.rotation || 0;
+            document.getElementById('valBgRotation').textContent = `${b.rotation || 0}°`;
+        }
+
+        function loadVectorInputs() {
+            const v = state.vector;
+            document.getElementById('chkShowVector').checked = v.show;
+            document.getElementById('vecX').value = v.x;
+            document.getElementById('valVecX').textContent = `${v.x}px`;
+            document.getElementById('vecY').value = v.y;
+            document.getElementById('valVecY').textContent = `${v.y}px`;
+            document.getElementById('vecScale').value = Math.round(v.scale * 100);
+            document.getElementById('valVecScale').textContent = `${Math.round(v.scale * 100)}%`;
+            document.getElementById('vecRot').value = v.rotation || 0;
+            document.getElementById('valVecRot').textContent = `${v.rotation || 0}°`;
+            document.getElementById('chkVecFlip').checked = v.flip;
+            document.getElementById('chkVecShadow').checked = v.shadow;
+            document.getElementById('vecGlow').value = v.glow || 0;
+            document.getElementById('valVecGlow').textContent = `${v.glow || 0}px`;
+            document.getElementById('vecGlowColor').value = v.glowColor || "#00d2ff";
+        }
+
+        function saveSentenceInputs() {
             const sent = state.sentences[state.activeSentenceIndex];
             if (!sent) return;
 
@@ -1752,6 +2073,7 @@
             sent.visible = document.getElementById('sentVisible').checked;
 
             render();
+            recordHistory();
         }
 
         function applyPreset(id) {
@@ -1762,10 +2084,11 @@
             state.height = p.height;
             state.template.url = resolveUrl(p.templateUrl);
             state.vector.show = p.vectorShow;
-            state.source.y = p.sourceRoleY;
-            state.source.x = p.sourceAlign === 'right' ? 1450 : (p.width / 2);
+            state.source.roleX = p.roleX;
+            state.source.roleY = p.roleY;
+            state.source.nameX = p.nameX;
+            state.source.nameY = p.nameY;
 
-            // Deep copy sentences
             state.sentences = JSON.parse(JSON.stringify(p.sentences));
             state.activeSentenceIndex = 0;
 
@@ -1775,11 +2098,14 @@
 
             rebuildSentenceStrip();
             loadActiveSentenceIntoInputs();
+            loadSourceInputs();
+            loadVectorInputs();
             render();
+            recordHistory();
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // INTERACTIVE CANVAS DRAGGING
+        // INTERACTIVE CANVAS DRAGGING (ALL ELEMENTS)
         // ═══════════════════════════════════════════════════════════════════
 
         function setupCanvasDragging() {
@@ -1789,13 +2115,43 @@
                 const clickX = (e.clientX - rect.left) * scale;
                 const clickY = (e.clientY - rect.top) * scale;
 
-                // Check if clicked near an active sentence
+                // 1. Check Source Role
+                if (state.source.roleVisible) {
+                    const rDist = Math.hypot(clickX - state.source.roleX, clickY - state.source.roleY);
+                    if (rDist < 80) {
+                        state.drag.isDragging = true;
+                        state.drag.target = 'role';
+                        state.drag.startX = clickX;
+                        state.drag.startY = clickY;
+                        state.drag.origX = state.source.roleX;
+                        state.drag.origY = state.source.roleY;
+                        // Switch to source panel
+                        document.querySelector('[data-target="panel-source"]').click();
+                        return;
+                    }
+                }
+
+                // 2. Check Source Name
+                if (state.source.nameVisible) {
+                    const nDist = Math.hypot(clickX - state.source.nameX, clickY - state.source.nameY);
+                    if (nDist < 100) {
+                        state.drag.isDragging = true;
+                        state.drag.target = 'name';
+                        state.drag.startX = clickX;
+                        state.drag.startY = clickY;
+                        state.drag.origX = state.source.nameX;
+                        state.drag.origY = state.source.nameY;
+                        document.querySelector('[data-target="panel-source"]').click();
+                        return;
+                    }
+                }
+
+                // 3. Check Sentences
                 for (let i = 0; i < state.sentences.length; i++) {
                     const s = state.sentences[i];
                     if (!s.visible) continue;
-                    // Simple bounding box check
                     const dist = Math.hypot(clickX - s.x, clickY - s.y);
-                    if (dist < 150) {
+                    if (dist < 140) {
                         state.drag.isDragging = true;
                         state.drag.target = 'sentence';
                         state.drag.targetIndex = i;
@@ -1806,12 +2162,13 @@
                         state.activeSentenceIndex = i;
                         rebuildSentenceStrip();
                         loadActiveSentenceIntoInputs();
+                        document.querySelector('[data-target="panel-text"]').click();
                         render();
                         return;
                     }
                 }
 
-                // Check player cutout
+                // 4. Check Player Cutout
                 if (state.vector.show) {
                     const vDist = Math.hypot(clickX - state.vector.x, clickY - state.vector.y);
                     if (vDist < 250) {
@@ -1821,6 +2178,7 @@
                         state.drag.startY = clickY;
                         state.drag.origX = state.vector.x;
                         state.drag.origY = state.vector.y;
+                        document.querySelector('[data-target="panel-vector"]').click();
                         return;
                     }
                 }
@@ -1840,6 +2198,20 @@
                     s.x = Math.round(state.drag.origX + dx);
                     s.y = Math.round(state.drag.origY + dy);
                     loadActiveSentenceIntoInputs();
+                } else if (state.drag.target === 'role') {
+                    state.source.roleX = Math.round(state.drag.origX + dx);
+                    state.source.roleY = Math.round(state.drag.origY + dy);
+                    document.getElementById('roleX').value = state.source.roleX;
+                    document.getElementById('roleY').value = state.source.roleY;
+                    document.getElementById('valRoleX').textContent = `${state.source.roleX}px`;
+                    document.getElementById('valRoleY').textContent = `${state.source.roleY}px`;
+                } else if (state.drag.target === 'name') {
+                    state.source.nameX = Math.round(state.drag.origX + dx);
+                    state.source.nameY = Math.round(state.drag.origY + dy);
+                    document.getElementById('nameX').value = state.source.nameX;
+                    document.getElementById('nameY').value = state.source.nameY;
+                    document.getElementById('valNameX').textContent = `${state.source.nameX}px`;
+                    document.getElementById('valNameY').textContent = `${state.source.nameY}px`;
                 } else if (state.drag.target === 'vector') {
                     state.vector.x = Math.round(state.drag.origX + dx);
                     state.vector.y = Math.round(state.drag.origY + dy);
@@ -1852,16 +2224,32 @@
             });
 
             window.addEventListener('mouseup', () => {
-                state.drag.isDragging = false;
+                if (state.drag.isDragging) {
+                    state.drag.isDragging = false;
+                    recordHistory();
+                }
             });
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // EVENT LISTENERS & WIRING
+        // EVENT LISTENERS & SETUP
         // ═══════════════════════════════════════════════════════════════════
 
         function setupListeners() {
             setupCanvasDragging();
+
+            // Undo / Redo
+            document.getElementById('btnUndo').addEventListener('click', undo);
+            document.getElementById('btnRedo').addEventListener('click', redo);
+            window.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                    if (e.shiftKey) redo(); else undo();
+                    e.preventDefault();
+                } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+                    redo();
+                    e.preventDefault();
+                }
+            });
 
             // Preset Pills
             document.querySelectorAll('.preset-pill').forEach(b => {
@@ -1878,11 +2266,10 @@
                 });
             });
 
-            // Add Sentence Button
+            // Add Sentence
             document.getElementById('btnAddSentence').addEventListener('click', () => {
-                const newId = `sent_${state.sentences.length + 1}`;
                 state.sentences.push({
-                    id: newId,
+                    id: `sent_${state.sentences.length + 1}`,
                     name: `جملة ${state.sentences.length + 1}`,
                     text: "نص جملة جديد للتخصيص",
                     font: "AraJozoor",
@@ -1902,7 +2289,8 @@
                 rebuildSentenceStrip();
                 loadActiveSentenceIntoInputs();
                 render();
-                showToast("➕ تم إضافة جملة جديدة مع تحكم منفصل في لونها ومكانها وخطها!");
+                recordHistory();
+                showToast("➕ تم إضافة جملة جديدة مستقلة!");
             });
 
             // Delete Sentence
@@ -1916,30 +2304,61 @@
                 rebuildSentenceStrip();
                 loadActiveSentenceIntoInputs();
                 render();
+                recordHistory();
                 showToast("🗑️ تم حذف الجملة المحددة");
             });
 
-            // Active Sentence Input changes
+            // Sentence input listeners
             ['sentText', 'sentFont', 'sentAlign', 'sentColor', 'sentStrokeColor', 'sentStrokeWidth', 'sentVisible'].forEach(id => {
-                document.getElementById(id).addEventListener('input', saveInputsIntoActiveSentence);
+                document.getElementById(id).addEventListener('input', saveSentenceInputs);
             });
             ['sentSize', 'sentWidth', 'sentX', 'sentY', 'sentShadow', 'sentLineHeight'].forEach(id => {
                 document.getElementById(id).addEventListener('input', (e) => {
                     const valSpan = document.getElementById(`val${id.charAt(0).toUpperCase() + id.slice(1)}`);
                     if (valSpan) valSpan.textContent = id === 'sentLineHeight' ? e.target.value : `${e.target.value}px`;
-                    saveInputsIntoActiveSentence();
+                    saveSentenceInputs();
                 });
             });
 
-            // Source block inputs
-            document.getElementById('roleText').addEventListener('input', (e) => { state.source.roleText = e.target.value; render(); });
-            document.getElementById('roleColor').addEventListener('input', (e) => { state.source.roleColor = e.target.value; render(); });
-            document.getElementById('nameText').addEventListener('input', (e) => { state.source.nameText = e.target.value; render(); });
-            document.getElementById('nameColor').addEventListener('input', (e) => { state.source.nameColor = e.target.value; render(); });
-            document.getElementById('sourceFont').addEventListener('change', (e) => { state.source.font = e.target.value; render(); });
-            document.getElementById('sourceY').addEventListener('input', (e) => {
-                state.source.y = parseInt(e.target.value);
-                document.getElementById('valSourceY').textContent = `${e.target.value}px`;
+            // Source Role inputs
+            document.getElementById('roleText').addEventListener('input', (e) => { state.source.roleText = e.target.value; render(); recordHistory(); });
+            document.getElementById('roleColor').addEventListener('input', (e) => { state.source.roleColor = e.target.value; render(); recordHistory(); });
+            document.getElementById('roleFont').addEventListener('change', (e) => { state.source.roleFont = e.target.value; render(); recordHistory(); });
+            document.getElementById('roleVisible').addEventListener('change', (e) => { state.source.roleVisible = e.target.checked; render(); recordHistory(); });
+            document.getElementById('roleSize').addEventListener('input', (e) => {
+                state.source.roleSize = parseInt(e.target.value);
+                document.getElementById('valRoleSize').textContent = `${e.target.value}px`;
+                render();
+            });
+            document.getElementById('roleX').addEventListener('input', (e) => {
+                state.source.roleX = parseInt(e.target.value);
+                document.getElementById('valRoleX').textContent = `${e.target.value}px`;
+                render();
+            });
+            document.getElementById('roleY').addEventListener('input', (e) => {
+                state.source.roleY = parseInt(e.target.value);
+                document.getElementById('valRoleY').textContent = `${e.target.value}px`;
+                render();
+            });
+
+            // Source Name inputs
+            document.getElementById('nameText').addEventListener('input', (e) => { state.source.nameText = e.target.value; render(); recordHistory(); });
+            document.getElementById('nameColor').addEventListener('input', (e) => { state.source.nameColor = e.target.value; render(); recordHistory(); });
+            document.getElementById('nameFont').addEventListener('change', (e) => { state.source.nameFont = e.target.value; render(); recordHistory(); });
+            document.getElementById('nameVisible').addEventListener('change', (e) => { state.source.nameVisible = e.target.checked; render(); recordHistory(); });
+            document.getElementById('nameSize').addEventListener('input', (e) => {
+                state.source.nameSize = parseInt(e.target.value);
+                document.getElementById('valNameSize').textContent = `${e.target.value}px`;
+                render();
+            });
+            document.getElementById('nameX').addEventListener('input', (e) => {
+                state.source.nameX = parseInt(e.target.value);
+                document.getElementById('valNameX').textContent = `${e.target.value}px`;
+                render();
+            });
+            document.getElementById('nameY').addEventListener('input', (e) => {
+                state.source.nameY = parseInt(e.target.value);
+                document.getElementById('valNameY').textContent = `${e.target.value}px`;
                 render();
             });
 
@@ -1969,9 +2388,14 @@
                 document.getElementById('valBgContrast').textContent = `${e.target.value}%`;
                 render();
             });
+            document.getElementById('bgRotation').addEventListener('input', (e) => {
+                state.bg.rotation = parseInt(e.target.value);
+                document.getElementById('valBgRotation').textContent = `${e.target.value}°`;
+                render();
+            });
 
-            // Player controls
-            document.getElementById('chkShowVector').addEventListener('change', (e) => { state.vector.show = e.target.checked; render(); });
+            // Player Vector controls
+            document.getElementById('chkShowVector').addEventListener('change', (e) => { state.vector.show = e.target.checked; render(); recordHistory(); });
             document.getElementById('vecX').addEventListener('input', (e) => {
                 state.vector.x = parseInt(e.target.value);
                 document.getElementById('valVecX').textContent = `${e.target.value}px`;
@@ -1987,11 +2411,25 @@
                 document.getElementById('valVecScale').textContent = `${e.target.value}%`;
                 render();
             });
-            document.getElementById('chkVecFlip').addEventListener('change', (e) => { state.vector.flip = e.target.checked; render(); });
-            document.getElementById('chkVecShadow').addEventListener('change', (e) => { state.vector.shadow = e.target.checked; render(); });
+            document.getElementById('vecRot').addEventListener('input', (e) => {
+                state.vector.rotation = parseInt(e.target.value);
+                document.getElementById('valVecRot').textContent = `${e.target.value}°`;
+                render();
+            });
+            document.getElementById('chkVecFlip').addEventListener('change', (e) => { state.vector.flip = e.target.checked; render(); recordHistory(); });
+            document.getElementById('chkVecShadow').addEventListener('change', (e) => { state.vector.shadow = e.target.checked; render(); recordHistory(); });
+            document.getElementById('vecGlow').addEventListener('input', (e) => {
+                state.vector.glow = parseInt(e.target.value);
+                document.getElementById('valVecGlow').textContent = `${e.target.value}px`;
+                render();
+            });
+            document.getElementById('vecGlowColor').addEventListener('input', (e) => {
+                state.vector.glowColor = e.target.value;
+                render();
+            });
 
             // Template overlay
-            document.getElementById('selectTemplateOverlay').addEventListener('change', (e) => { state.template.url = resolveUrl(e.target.value); render(); });
+            document.getElementById('selectTemplateOverlay').addEventListener('change', (e) => { state.template.url = resolveUrl(e.target.value); render(); recordHistory(); });
             document.getElementById('tmplOpacity').addEventListener('input', (e) => {
                 state.template.opacity = parseInt(e.target.value) / 100;
                 document.getElementById('valTmplOpacity').textContent = `${e.target.value}%`;
@@ -2003,7 +2441,7 @@
             document.getElementById('fileBgInput').addEventListener('change', (e) => {
                 if (!e.target.files.length) return;
                 const reader = new FileReader();
-                reader.onload = (evt) => { state.bg.url = evt.target.result; render(); showToast("✅ تم وضع الصورة الخلفية!"); };
+                reader.onload = (evt) => { state.bg.url = evt.target.result; render(); recordHistory(); showToast("✅ تم وضع الصورة الخلفية!"); };
                 reader.readAsDataURL(e.target.files[0]);
             });
 
@@ -2011,7 +2449,7 @@
             document.getElementById('fileCutoutInput').addEventListener('change', (e) => {
                 if (!e.target.files.length) return;
                 const reader = new FileReader();
-                reader.onload = (evt) => { state.vector.url = evt.target.result; state.vector.show = true; document.getElementById('chkShowVector').checked = true; render(); showToast("✅ تم وضع صورة اللاعب المفرغة!"); };
+                reader.onload = (evt) => { state.vector.url = evt.target.result; state.vector.show = true; document.getElementById('chkShowVector').checked = true; render(); recordHistory(); showToast("✅ تم وضع صورة اللاعب المفرغة!"); };
                 reader.readAsDataURL(e.target.files[0]);
             });
 
@@ -2019,7 +2457,7 @@
             document.getElementById('fileTemplateInput').addEventListener('change', (e) => {
                 if (!e.target.files.length) return;
                 const reader = new FileReader();
-                reader.onload = (evt) => { state.template.url = evt.target.result; render(); showToast("🎉 تم تطبيق القالب الجديد فورًا!"); };
+                reader.onload = (evt) => { state.template.url = evt.target.result; render(); recordHistory(); showToast("🎉 تم تطبيق القالب الجديد فورًا!"); };
                 reader.readAsDataURL(e.target.files[0]);
             });
 
@@ -2053,25 +2491,17 @@
             document.getElementById('btnCancelPublish').addEventListener('click', () => document.getElementById('modalPublish').classList.remove('active'));
             document.getElementById('btnConfirmPublish').addEventListener('click', publishFacebook);
 
-            // AI Background
+            // AI Background via Pollinations (Zero quota, 100% Free)
             document.getElementById('btnGenerateAiBg').addEventListener('click', async () => {
                 const prompt = document.getElementById('promptAiBg').value.trim();
                 if (!prompt) return;
-                showToast("⚡ جاري توليد خلفية AI بـ FLUX (2.5 ثانية)...");
-                try {
-                    const formData = new FormData();
-                    formData.append('prompt', prompt);
-                    const res = await fetch(`${API_BASE}/api/generate_ai_bg`, { method: 'POST', body: formData }).then(r => r.json());
-                    if (res.status === 'success') {
-                        state.bg.url = resolveUrl(res.url);
-                        render();
-                        showToast("✅ تم توليد وتطبيق الخلفية بنجاح!");
-                    } else {
-                        showToast(`❌ ${res.message}`);
-                    }
-                } catch (e) {
-                    showToast("تأكد من تشغيل السيرفر المحلي عبر start_studio.bat");
-                }
+                showToast("⚡ جاري جلب خلفية رياضية فائقة الجودة بـ Pollinations FLUX...");
+                const encodedPrompt = encodeURIComponent(prompt);
+                const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${state.width}&height=${state.height}&model=flux&nologo=true`;
+                state.bg.url = pollinationsUrl;
+                render();
+                recordHistory();
+                showToast("✅ تم وضع وتطبيق الخلفية بنجاح بدون استهلاك كوتة!");
             });
 
             // AI Vector
@@ -2090,6 +2520,7 @@
                         state.vector.show = true;
                         document.getElementById('chkShowVector').checked = true;
                         render();
+                        recordHistory();
                         showToast(`🎉 تم رسم وعزل فيكتور ${name} بنجاح!`);
                     } else {
                         showToast(`❌ ${res.message}`);
@@ -2114,6 +2545,7 @@
                         el.classList.add('active');
                         state.bg.url = resolveUrl(p.url);
                         render();
+                        recordHistory();
                     };
                     bgGrid.appendChild(el);
                 });
@@ -2131,6 +2563,7 @@
                         state.vector.show = true;
                         document.getElementById('chkShowVector').checked = true;
                         render();
+                        recordHistory();
                     };
                     cutGrid.appendChild(el);
                 });
@@ -2153,7 +2586,6 @@
                     item.className = 'news-item';
                     item.innerHTML = `<h4>${a.title}</h4><p>📍 المصدر: ${a.source} ${a.photo_url ? '• 📷 صورة متوفرة' : ''}</p>`;
                     item.onclick = () => {
-                        // Split title into sentences if suitable
                         const words = a.title.split(' ');
                         if (words.length > 7 && state.sentences.length >= 2) {
                             const mid = Math.ceil(words.length / 2);
@@ -2166,6 +2598,7 @@
                         loadActiveSentenceIntoInputs();
                         modal.classList.remove('active');
                         render();
+                        recordHistory();
                         showToast("📰 تم ملء الخبر الحقيقي وتوزيعه على الجمل!");
                     };
                     list.appendChild(item);
@@ -2217,6 +2650,7 @@
             setupListeners();
             await loadGalleries();
             applyPreset('kora_breaking');
+            recordHistory();
         });
     </script>
 </body>
