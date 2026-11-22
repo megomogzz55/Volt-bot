@@ -281,61 +281,20 @@ body {{
     raise RuntimeError("Failed to render card with Headless Browser")
 
 
-def _prepare_statement_player_photo(photo_path: str, target_width: int = 1200, target_height: int = 2550) -> str:
-    """
-    Intelligently frames any photo (landscape or portrait) for Template #2:
-    - Sets clean red sports background #ca2424.
-    - Positions player torso & head naturally without over-zooming or cropping the head.
-    """
-    img = Image.open(photo_path).convert("RGBA")
-    w, h = img.size
-    
-    # Create canvas with official red background
-    canvas = Image.new("RGBA", (target_width, target_height), (202, 36, 36, 255))
-    aspect = w / h
-    resample = Image.Resampling.LANCZOS
-    
-    if aspect > 1.2:  # Landscape photo (e.g. 16:9 news photo)
-        # Scale photo so height is around 1700-1800px to keep head in upper half
-        scale = 1750 / h
-        new_w = int(w * scale)
-        new_h = int(h * scale)
-        resized = img.resize((new_w, new_h), resample)
-        
-        # Center horizontally and position head at y ≈ 400
-        x_offset = (target_width - new_w) // 2
-        y_offset = 350
-        canvas.paste(resized, (x_offset, y_offset), resized if resized.mode == 'RGBA' else None)
-    else:  # Portrait / Cutout
-        scale = min(target_width / w, target_height / h) * 0.95
-        new_w = int(w * scale)
-        new_h = int(h * scale)
-        resized = img.resize((new_w, new_h), resample)
-        
-        x_offset = (target_width - new_w) // 2
-        y_offset = target_height - new_h
-        canvas.paste(resized, (x_offset, y_offset), resized if resized.mode == 'RGBA' else None)
-        
-    temp_prepared = os.path.join(OUTPUT_DIR, "_tmp_statement_player.png")
-    canvas.save(temp_prepared, "PNG")
-    return temp_prepared
-
-
 def render_statement_card(
     photo_path: str,
     statement_text: str,
     source_role: str = "الصحفي",
     source_name: str = "فابريزيو رومانو",
     output_filename: str = "statement_card.png",
-    photo_focus: str = "center 20%"
+    photo_focus: str = "left 20%"
 ) -> str:
     """
     Renders Template #2 (Manchettes, Statements, Quotes & Interviews):
-    - Photo on the left under template (properly framed, red #ca2424 background, 2160x2700 HD).
-    - Shaded horizontal gradient to black on the right.
-    - KORA VOLT logo at top right.
-    - Headline / statement in Jozor bold white font in the right column.
-    - Speaker role (in electric blue) above Speaker name (in white) at bottom right.
+    - Real full-size photo spans across the ENTIRE canvas under the template.
+    - Shaded horizontal gradient overlay to black on the right + 2 icons at top right.
+    - Big, tall, multi-line Jozor font in the right column filling the vertical height (y = 700 to 2050).
+    - Speaker role in electric blue above Speaker name in white at bottom right.
     """
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
@@ -345,9 +304,6 @@ def render_statement_card(
     if not os.path.exists(photo_path):
         raise FileNotFoundError(f"Photo not found at: {photo_path}")
         
-    # Prepare player framing on red background
-    prepared_photo = _prepare_statement_player_photo(photo_path)
-    
     with open(tmpl_file, "rb") as f:
         tmpl_b64 = base64.b64encode(f.read()).decode()
         
@@ -356,8 +312,25 @@ def render_statement_card(
         with open(FONT_PATH, "rb") as f:
             font_b64 = base64.b64encode(f.read()).decode()
             
-    with open(prepared_photo, "rb") as f:
+    ext = os.path.splitext(photo_path)[1].lower()
+    mime = "image/png" if ext == ".png" else "image/jpeg"
+    with open(photo_path, "rb") as f:
         photo_b64 = base64.b64encode(f.read()).decode()
+        
+    # Dynamic font sizing based on length to fill the vertical space like reference
+    text_len = len(statement_text)
+    if text_len <= 80:
+        font_size = "80px"
+        line_height = "1.7"
+    elif text_len <= 130:
+        font_size = "74px"
+        line_height = "1.65"
+    elif text_len <= 180:
+        font_size = "68px"
+        line_height = "1.6"
+    else:
+        font_size = "60px"
+        line_height = "1.55"
         
     html = f"""<!DOCTYPE html>
 <html dir="rtl" lang="ar">
@@ -375,22 +348,19 @@ body {{
   width: 2160px; height: 2700px;
   font-family: 'Jozor', sans-serif;
   overflow: hidden; position: relative;
-  background: #ca2424;
+  background: #000;
 }}
 
-/* 1. PLAYER POSITIONED ON THE LEFT (Matching Reference Exactly) */
-.player-layer {{
+/* 1. FULL-SIZE PHOTO ACROSS ENTIRE CANVAS UNDER TEMPLATE */
+.full-photo {{
   position: absolute;
-  top: 150px;
-  left: 0;
-  width: 1200px;
-  height: 2550px;
-  background: url(data:image/png;base64,{photo_b64}) no-repeat center bottom;
-  background-size: contain;
+  inset: 0;
+  background: url(data:{mime};base64,{photo_b64}) no-repeat {photo_focus};
+  background-size: cover;
   z-index: 1;
 }}
 
-/* 2. SHADED HORIZONTAL TEMPLATE OVERLAY */
+/* 2. SHADED HORIZONTAL TEMPLATE OVERLAY (Gradient to Black + 2 Icons Top-Right) */
 .template-overlay {{
   position: absolute; inset: 0;
   background: url(data:image/png;base64,{tmpl_b64}) center/cover;
@@ -398,79 +368,79 @@ body {{
   pointer-events: none;
 }}
 
-/* 3. HEADLINE COLUMN ON THE RIGHT */
-.content-col {{
+/* 3. TALL, BIG HEADLINE / STATEMENT ON THE RIGHT (Filling vertical height) */
+.headline-container {{
   position: absolute;
-  left: 1140px; right: 90px;
-  top: 800px; bottom: 120px;
+  top: 720px;
+  left: 1180px;
+  right: 80px;
+  height: 1350px;
   z-index: 3;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  text-align: center;
-}}
-
-.headline-box {{
-  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  flex: 1;
-  padding: 20px 0;
+  text-align: center;
 }}
 
 .headline-text {{
-  font-size: 64px;
+  font-size: {font_size};
   color: #ffffff;
-  line-height: 1.55;
-  -webkit-text-stroke: 1.2px #ffffff;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.95);
-  max-width: 880px;
+  line-height: {line_height};
+  -webkit-text-stroke: 1.5px #ffffff;
+  text-shadow: 0 4px 25px rgba(0,0,0,0.95);
+  max-width: 900px;
+  letter-spacing: 0.5px;
 }}
 
-/* 4. SPEAKER AT THE BOTTOM OF THE COLUMN */
-.speaker-box {{
-  width: 100%;
+/* 4. SPEAKER AT THE BOTTOM RIGHT */
+.speaker-container {{
+  position: absolute;
+  bottom: 120px;
+  left: 1180px;
+  right: 80px;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 25px;
+  text-align: center;
 }}
 
 .speaker-role {{
-  font-size: 32px;
+  font-size: 34px;
   font-weight: 700;
   color: #00b4d8;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   margin-bottom: 8px;
   text-shadow: 0 0 15px rgba(0, 180, 216, 0.5);
 }}
 
 .speaker-name {{
-  font-size: 46px;
+  font-size: 50px;
   font-weight: 700;
   color: #ffffff;
-  -webkit-text-stroke: 0.8px #ffffff;
+  -webkit-text-stroke: 1px #ffffff;
   letter-spacing: 0.5px;
   text-shadow: 0 4px 15px rgba(0,0,0,0.9);
 }}
 </style>
 </head>
 <body>
-  <div class="player-layer"></div>
+  <!-- Full-size photo across entire canvas -->
+  <div class="full-photo"></div>
+  
+  <!-- Shaded template overlay with icons -->
   <div class="template-overlay"></div>
   
-  <div class="content-col">
-    <div class="headline-box">
-      <div class="headline-text">{statement_text}</div>
-    </div>
-    
-    <div class="speaker-box">
-      <div class="speaker-role">{source_role}</div>
-      <div class="speaker-name">{source_name}</div>
-    </div>
+  <!-- Tall, impactful headline occupying vertical height -->
+  <div class="headline-container">
+    <div class="headline-text">{statement_text}</div>
+  </div>
+  
+  <!-- Speaker at bottom right -->
+  <div class="speaker-container">
+    <div class="speaker-role">{source_role}</div>
+    <div class="speaker-name">{source_name}</div>
   </div>
 </body>
 </html>"""
