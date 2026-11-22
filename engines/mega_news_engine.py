@@ -45,6 +45,7 @@ COMPETITORS = [
 
 # ─── Football keyword filter ───
 FOOTBALL_KW = [
+    # Arabic keywords
     "كرة", "دوري", "نادي", "لاعب", "مدرب", "هدف", "مباراة", "مباريات",
     "تعاقد", "انتقال", "ميركاتو", "صفقة", "منتخب", "صلاح", "ريال مدريد",
     "برشلونة", "ليفربول", "مانشستر", "أرسنال", "تشيلسي", "بايرن", "باريس",
@@ -57,6 +58,12 @@ FOOTBALL_KW = [
     "فوز", "خسارة", "تعادل", "ثنائية", "هاتريك", "ركلة جزاء",
     "كارت أحمر", "إيقاف", "إصابة", "جراحة", "غياب",
     "ترتيب", "صدارة", "هبوط", "صعود",
+    # English keywords (for Sky Sports, BBC, Marca, etc.)
+    "football", "soccer", "premier league", "league", "cup", "transfer", "deal",
+    "goal", "manager", "player", "match", "vs", "liverpool", "arsenal",
+    "manchester", "chelsea", "madrid", "barcelona", "bayern", "fifa", "uefa",
+    "champions league", "wsl", "spurs", "tottenham", "city", "united",
+    "everton", "newcastle", "villa", "wolves", "brighton", "sign", "contract"
 ]
 
 NON_FOOTBALL = [
@@ -70,6 +77,10 @@ NON_FOOTBALL = [
     "بيك اب", "دنك", "ثلاثية", "ريباوند",
     "UFC", "MMA", "فنون قتالية", "مصارعة",
     "أولمبياد", "ألعاب قوى",
+    # English non-football terms
+    "f1", "formula 1", "grand prix", "verstappen", "hamilton", "norris",
+    "nba", "lakers", "celtics", "warriors", "lebron", "curry", "ufc", "mma",
+    "cricket", "rugby", "tennis", "djokovic", "alcaraz", "sinner", "golf"
 ]
 
 # ─── Sources Configuration ───
@@ -118,6 +129,34 @@ DIRECT_RSS = [
         "url": "https://www.espn.com/espn/rss/soccer/news",
         "type": "football",
         "quality": "medium",
+        "lang": "en",
+    },
+    {
+        "name": "Sky Sports Premier League",
+        "url": "https://www.skysports.com/rss/12040",
+        "type": "football",
+        "quality": "high",
+        "lang": "en",
+    },
+    {
+        "name": "Sky Sports Transfers",
+        "url": "https://www.skysports.com/rss/11095",
+        "type": "football",
+        "quality": "high",
+        "lang": "en",
+    },
+    {
+        "name": "Marca Football",
+        "url": "https://e00-marca.uecdn.es/rss/en/football.xml",
+        "type": "football",
+        "quality": "high",
+        "lang": "en",
+    },
+    {
+        "name": "The Guardian Football",
+        "url": "https://www.theguardian.com/football/rss",
+        "type": "football",
+        "quality": "high",
         "lang": "en",
     },
     {

@@ -35,16 +35,17 @@ GROQ_API_KEY = _get_key("GROQ_API_KEY")
 GEMINI_API_KEY = _get_key("GEMINI_API_KEY") or _get_key("GOOGLE_API_KEY")
 
 
-SYSTEM_PROMPT = """أنت محرر رياضي محترف في صفحة أخبار كرة قدم عربية.
-أعد صياغة الخبر التالي بأسلوبك الخاص.
+SYSTEM_PROMPT = """أنت محرر رياضي محترف وبارع في صفحة أخبار كرة قدم عربية كبرى.
+أعد صياغة الخبر التالي بأسلوب صحفي جذاب وواضح.
 القواعد:
-- اكتب بالعربية الفصحى مع لمسة مصرية خفيفة
-- لا تذكر أبدًا: يلا كورة، في الجول، كووورة، وين وين، بي إن سبورت، اليوم السابع
-- غير الصياغة تمامًا لكن حافظ على المعنى والحقائق
-- اجعل العنوان جذابًا ومثيرًا
-- أضف ملخص قصير (جملتين-3 جمل) يوضح تفاصيل الخبر
-- الرد بصيغة JSON: {"title": "...", "summary": "..."}
-- لا تضف معلومات من عندك أو أرقام لم تُذكر"""
+- إذا كان الخبر باللغة الإنجليزية، ترجمه وأعد صياغته إلى لغة عربية صحفية فخمة ومشوقة
+- اكتب بالعربية الفصحى بأسلوب إخباري مشوق ومباشر
+- لا تذكر أبدًا أي منافسين عرب (يلا كورة، في الجول، كووورة، وين وين، بي إن سبورت، اليوم السابع، هسبريس)
+- غير الصياغة تمامًا لكن حافظ على المعنى والحقائق والأرقام
+- اجعل العنوان جذابًا ومثيرًا في سطرين متوازنين (حوالي 8-14 كلمة)
+- أضف ملخصًا قصيرًا ومفيدًا (جملتين-3 جمل) يوضح تفاصيل الخبر
+- الرد بصيغة JSON حصرًا: {"title": "...", "summary": "..."}
+- لا تضف أي نص أو شروحات خارج الـ JSON"""
 
 
 def rewrite_with_groq(title, summary=""):
@@ -172,11 +173,12 @@ def rewrite_with_templates(title, summary="", category="general"):
     return {"title": new_title, "summary": summary}
 
 
-def rewrite_article(title, summary="", category="general"):
+def rewrite_article(title, summary="", category="general", cat_id=None, **kwargs):
     """
     Rewrite article using the best available method.
     Priority: Groq > Gemini > Templates (fallback)
     """
+    cat = cat_id or category or "general"
     # Try Groq first (fastest)
     result = rewrite_with_groq(title, summary)
     if result and result.get("title"):
@@ -188,4 +190,4 @@ def rewrite_article(title, summary="", category="general"):
         return result
     
     # Fallback to templates
-    return rewrite_with_templates(title, summary, category)
+    return rewrite_with_templates(title, summary, cat)
