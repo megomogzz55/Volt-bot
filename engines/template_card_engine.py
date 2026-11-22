@@ -281,9 +281,9 @@ body {{
     raise RuntimeError("Failed to render card with Headless Browser")
 
 
-def _format_vertical_manchette(text: str, target_lines: int = 7) -> str:
+def _format_vertical_manchette(text: str, target_lines: int = 8) -> str:
     """
-    Splits text into approximately target_lines (6-8) balanced vertical lines,
+    Splits text into approximately target_lines (7-9) balanced vertical lines,
     ensuring it occupies the full vertical height of Template #2 without any empty gaps.
     """
     words = text.strip().split()
@@ -318,7 +318,7 @@ def render_statement_card(
     Renders Template #2 (Manchettes, Statements, Quotes & Interviews):
     - Real full-size photo properly centered in the left transparent window (65% center).
     - Shaded horizontal gradient overlay to black on the right + 2 icons at top right.
-    - Big, tall, multi-line Jozor font in the right column filling the vertical height (y = 700 to 2050).
+    - Big, tall, multi-line Jozor font in the right column filling the vertical height (y = 560 to 2100).
     - Speaker role in electric blue above Speaker name in white at bottom right.
     """
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -342,8 +342,8 @@ def render_statement_card(
     with open(photo_path, "rb") as f:
         photo_b64 = base64.b64encode(f.read()).decode()
         
-    # Format text into 6-8 vertical lines so it occupies the full vertical height like reference
-    formatted_statement = _format_vertical_manchette(statement_text, target_lines=7)
+    # Format text into 7-9 vertical lines so it occupies the full vertical height like reference
+    formatted_statement = _format_vertical_manchette(statement_text, target_lines=8)
     
     html = f"""<!DOCTYPE html>
 <html dir="rtl" lang="ar">
@@ -381,13 +381,13 @@ body {{
   pointer-events: none;
 }}
 
-/* 3. TALL, BIG HEADLINE / STATEMENT ON THE RIGHT (Filling vertical height) */
+/* 3. TALL, BIG HEADLINE / STATEMENT ON THE RIGHT (Filling full vertical height: y = 560 to 2100) */
 .headline-container {{
   position: absolute;
-  top: 700px;
+  top: 560px;
   left: 1140px;
   right: 60px;
-  height: 1420px;
+  height: 1580px;
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -397,12 +397,13 @@ body {{
 }}
 
 .headline-text {{
-  font-size: 86px;
+  font-size: 92px;
   color: #ffffff;
-  line-height: 1.65;
-  -webkit-text-stroke: 1.5px #ffffff;
-  text-shadow: 0 4px 25px rgba(0,0,0,0.98);
-  max-width: 920px;
+  line-height: 1.62;
+  -webkit-text-stroke: 1.8px #ffffff;
+  text-shadow: 0 4px 30px rgba(0,0,0,0.98);
+  max-width: 840px;
+  letter-spacing: 0.5px;
 }}
 
 /* 4. SPEAKER AT THE BOTTOM RIGHT */
@@ -423,15 +424,15 @@ body {{
   font-weight: 700;
   color: #00b4d8;
   letter-spacing: 2px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   text-shadow: 0 0 15px rgba(0, 180, 216, 0.5);
 }}
 
 .speaker-name {{
-  font-size: 56px;
+  font-size: 58px;
   font-weight: 700;
   color: #ffffff;
-  -webkit-text-stroke: 1px #ffffff;
+  -webkit-text-stroke: 1.2px #ffffff;
   letter-spacing: 0.5px;
   text-shadow: 0 4px 15px rgba(0,0,0,0.95);
 }}

@@ -835,7 +835,15 @@ class MegaNewsEngine:
         from engines.template_card_engine import render_template_card, render_statement_card
         
         if is_statement:
-            text_to_show = f"«{title}»" if "«" not in title else title
+            summary = article.get("rewritten_summary") or article.get("summary", "")
+            # If title is concise, append core summary to achieve 7-9 vertical lines like reference
+            if len(title.split()) < 15 and summary and len(summary) > 20:
+                first_sent = summary.split('.')[0].strip()
+                extra_words = " ".join(first_sent.split()[:14])
+                text_to_show = f"{title}.. {extra_words}"
+            else:
+                text_to_show = title
+                
             return render_statement_card(
                 photo_path=photo_path,
                 statement_text=text_to_show,
