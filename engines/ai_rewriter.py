@@ -184,6 +184,15 @@ def rewrite_article(title, summary="", category="general", cat_id=None, **kwargs
     if result and result.get("title"):
         return result
     
+    # Try Cloudflare Workers AI (LLaMA 3.1 70B)
+    try:
+        from engines.cloudflare_ai import rewrite_with_cloudflare
+        result = rewrite_with_cloudflare(title, summary)
+        if result and result.get("title"):
+            return result
+    except Exception:
+        pass
+        
     # Try Gemini
     result = rewrite_with_gemini(title, summary)
     if result and result.get("title"):

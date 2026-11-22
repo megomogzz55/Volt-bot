@@ -812,10 +812,15 @@ class MegaNewsEngine:
         # Download high-res source image to place under the template
         photo_path = self.download_article_image(article)
         
-        # If download failed or missing, use high-res default sports background
+        # If download failed or missing, generate custom AI background via Cloudflare FLUX or use default
         default_bg = os.path.join(BASE_DIR, "assets", "templates", "default_football_bg.jpg")
         if not photo_path or not os.path.exists(photo_path):
-            photo_path = default_bg
+            try:
+                from engines.cloudflare_ai import generate_flux_image
+                prompt = "cinematic dark dramatic sports lighting background, football stadium pitch, 4k high quality, no text"
+                photo_path = generate_flux_image(prompt)
+            except Exception:
+                photo_path = default_bg
         
         # Prefer rewritten title
         title = article.get("rewritten_title", article["title"])
