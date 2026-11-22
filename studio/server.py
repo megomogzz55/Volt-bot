@@ -219,10 +219,11 @@ def isolate_bg(image_url: str = Form(...)):
 class SavePresetRequest(BaseModel):
     preset_name: str
     preset_data: dict
+    active_role: Optional[str] = None # e.g. "kora_breaking", "kora_manchette", "fantasy_breaking", "fantasy_stats"
 
 @app.post("/api/save_preset")
 def save_preset(req: SavePresetRequest):
-    """Saves customized template configuration so the engine can reuse it."""
+    """Saves customized template configuration and immediately activates it for the automated bot engine."""
     presets = {}
     if os.path.exists(TEMPLATES_CONFIG_PATH):
         try:
@@ -232,10 +233,56 @@ def save_preset(req: SavePresetRequest):
             pass
             
     presets[req.preset_name] = req.preset_data
+    
+    # If assigned to an active system role, link it directly
+    if req.active_role:
+        presets[f"ACTIVE_{req.active_role.upper()}"] = req.preset_name
+        
     with open(TEMPLATES_CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(presets, f, ensure_ascii=False, indent=2)
         
-    return {"status": "success", "message": f"تم حفظ القالب: {req.preset_name}"}
+    return {"status": "success", "message": f"تم حفظ القالب '{req.preset_name}' وربطه بنظام البوت الآلي فورًا!"}
+
+
+class DeletePresetRequest(BaseModel):
+    preset_name: str
+
+@app.post("/api/delete_preset")
+def delete_preset(req: DeletePresetRequest):
+    """Deletes a saved preset from custom_templates.json."""
+    if not os.path.exists(TEMPLATES_CONFIG_PATH):
+        return {"status": "error", "message": "لا توجد قوالب محفوظة"}
+        
+    try:
+        with open(TEMPLATES_CONFIG_PATH, "r", encoding="utf-8") as f:
+            presets = json.load(f)
+            
+        if req.preset_name in presets:
+            del presets[req.preset_name]
+            with open(TEMPLATES_CONFIG_PATH, "w", encoding="utf-8") as f:
+                json.dump(presets, f, ensure_ascii=False, indent=2)
+            return {"status": "success", "message": f"تم حذف القالب: {req.preset_name}"}
+        else:
+            return {"status": "error", "message": "القالب غير موجود"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+class DeleteTemplateFileRequest(BaseModel):
+    filename: str
+
+@app.post("/api/delete_template_file")
+def delete_template_file(req: DeleteTemplateFileRequest):
+    """Deletes an uploaded template PNG from assets/templates/custom/."""
+    custom_dir = os.path.join(BASE_DIR, "assets", "templates", "custom")
+    target = os.path.join(custom_dir, req.filename)
+    if os.path.exists(target):
+        try:
+            os.remove(target)
+            return {"status": "success", "message": f"تم حذف ملف القالب: {req.filename}"}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+    return {"status": "error", "message": "ملف القالب غير موجود"}
 
 
 class PublishRequest(BaseModel):

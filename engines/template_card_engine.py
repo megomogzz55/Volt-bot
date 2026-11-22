@@ -18,6 +18,23 @@ TEMPLATE_PATH = os.path.join(BASE_DIR, "assets", "templates", "kora_volt_bg.png"
 STATEMENT_TEMPLATE_PATH = os.path.join(BASE_DIR, "assets", "templates", "kora_volt_headline_bg.png")
 FONT_PATH = os.path.join(BASE_DIR, "assets", "fonts", "AraJozoor-Regular.ttf")
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
+CUSTOM_TEMPLATES_CONFIG = os.path.join(BASE_DIR, "assets", "templates", "custom_templates.json")
+
+
+def _get_active_preset(role_name: str) -> dict:
+    """Retrieves active live custom preset saved from Volt Card Studio."""
+    if os.path.exists(CUSTOM_TEMPLATES_CONFIG):
+        try:
+            import json
+            with open(CUSTOM_TEMPLATES_CONFIG, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            active_key = f"ACTIVE_{role_name.upper()}"
+            preset_name = data.get(active_key)
+            if preset_name and preset_name in data:
+                return data[preset_name]
+        except Exception:
+            pass
+    return {}
 
 
 def _get_browser_path() -> str:
