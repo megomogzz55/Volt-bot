@@ -9,6 +9,7 @@ Matches the exact visual hierarchy of the reference design:
 
 import base64
 import os
+import shutil
 import subprocess
 from PIL import Image
 
@@ -17,7 +18,58 @@ TEMPLATE_PATH = os.path.join(BASE_DIR, "assets", "templates", "kora_volt_bg.png"
 STATEMENT_TEMPLATE_PATH = os.path.join(BASE_DIR, "assets", "templates", "kora_volt_headline_bg.png")
 FONT_PATH = os.path.join(BASE_DIR, "assets", "fonts", "AraJozoor-Regular.ttf")
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
-EDGE_PATH = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+
+
+def _get_browser_path() -> str:
+    """Find available headless browser (Edge/Chrome) on Windows, Linux, and GitHub Actions."""
+    for env_var in ["CHROME_PATH", "EDGE_PATH", "BROWSER_PATH"]:
+        val = os.environ.get(env_var)
+        if val and (os.path.exists(val) or shutil.which(val)):
+            return val
+
+    # Windows paths
+    for p in [
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+    ]:
+        if os.path.exists(p):
+            return p
+
+    # Linux / GitHub Actions / Mac
+    for name in ["google-chrome", "google-chrome-stable", "chromium-browser", "chromium", "microsoft-edge", "msedge"]:
+        path = shutil.which(name)
+        if path:
+            return path
+
+    for p in [
+        "/usr/bin/google-chrome",
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/chromium-browser",
+        "/usr/bin/chromium",
+    ]:
+        if os.path.exists(p):
+            return p
+
+    return "google-chrome"
+
+
+def _render_html_with_browser(html_path: str, png_path: str, width: int, height: int):
+    """Execute headless browser screenshot with full cross-platform flags."""
+    browser = _get_browser_path()
+    file_url = f"file:///{os.path.abspath(html_path).replace(os.sep, '/')}"
+    cmd = [
+        browser,
+        "--headless",
+        "--no-sandbox",
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        f"--screenshot={png_path}",
+        f"--window-size={width},{height}",
+        file_url
+    ]
+    subprocess.run(cmd, capture_output=True, timeout=30)
 
 
 def _split_headline_two_lines(headline: str) -> tuple:
@@ -215,16 +267,7 @@ body {{
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html)
         
-    cmd = [
-        EDGE_PATH,
-        "--headless",
-        "--disable-gpu",
-        f"--screenshot={png_path}",
-        "--window-size=1350,1688",
-        f"file:///{html_path.replace(os.sep, '/')}"
-    ]
-    
-    subprocess.run(cmd, capture_output=True, timeout=30)
+    _render_html_with_browser(html_path, png_path, 1350, 1688)
     
     if os.path.exists(png_path):
         img = Image.open(png_path).crop((0, 0, 1350, 1688))
@@ -235,7 +278,7 @@ body {{
             pass
         return png_path
         
-    raise RuntimeError("Failed to render card with Edge Headless")
+    raise RuntimeError("Failed to render card with Headless Browser")
 
 
 def render_statement_card(
@@ -406,15 +449,7 @@ body {{
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html)
         
-    cmd = [
-        EDGE_PATH,
-        "--headless",
-        "--disable-gpu",
-        f"--screenshot={png_path}",
-        "--window-size=2160,2700",
-        f"file:///{html_path.replace(os.sep, '/')}"
-    ]
-    subprocess.run(cmd, capture_output=True, timeout=30)
+    _render_html_with_browser(html_path, png_path, 2160, 2700)
     
     if os.path.exists(png_path):
         img = Image.open(png_path).crop((0, 0, 2160, 2700))
@@ -425,4 +460,4 @@ body {{
             pass
         return png_path
         
-    raise RuntimeError("Failed to render statement card with Edge Headless")
+    raise RuntimeError("Failed to render statement card with Headless Browser")

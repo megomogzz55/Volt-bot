@@ -296,14 +296,15 @@ def render_superstar_goal_card(scorer, assister, team, minute, stats, vector_fil
     return output_path
 
 def _render_html(html_file, output_path):
-    edge_exe = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-    if not os.path.exists(edge_exe):
-        edge_exe = "chromium"
+    from engines.template_card_engine import _get_browser_path
+    browser_exe = _get_browser_path()
 
     cmd = [
-        edge_exe,
+        browser_exe,
         "--headless",
+        "--no-sandbox",
         "--disable-gpu",
+        "--disable-dev-shm-usage",
         "--hide-scrollbars",
         "--window-size=1080,1350",
         f"--screenshot={output_path}",
