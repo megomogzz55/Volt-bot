@@ -235,10 +235,25 @@ def cmd_mega_news(publish=False, count=3, page="kora_volt"):
         
         if publish:
             try:
-                res = post_photo(card_path, caption=caption, page_key=page)
-                print(f"\n✅ PUBLISHED! Post ID: {res.get('id')}")
+                res = post_photo(image_path=card_path, caption=caption, page_key=page)
+                post_id = res.get('id') or res.get('post_id')
+                print(f"\n✅ PUBLISHED! Post ID: {post_id}")
                 engine.mark_posted(art["title"])
                 posted_count += 1
+                
+                # Send telegram alert if configured
+                try:
+                    from engines.telegram_notifier import send_telegram_alert
+                    page_name = "كورة ڤولت ⚡" if page == "kora_volt" else "فانتازي ڤولت ⚡"
+                    alert_text = (
+                        f"⚡ <b>تم نشر خبر جديد على {page_name}</b>\n\n"
+                        f"<b>العنوان:</b> {art.get('rewritten_title', art['title'])}\n"
+                        f"<b>معرف المنشور:</b> <code>{post_id}</code>"
+                    )
+                    send_telegram_alert(alert_text, image_path=card_path)
+                except Exception:
+                    pass
+                    
                 import time
                 if posted_count < count:
                     time.sleep(5)
