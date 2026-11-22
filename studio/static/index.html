@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volt Card Studio — أستوديو تصاميم وقوالب ڤولت</title>
+    <link rel="stylesheet" href="/static/studio.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- TOP NAVBAR -->
+    <header class="topbar">
+        <div class="brand">
+            <span class="logo-icon">⚡</span>
+            <div class="brand-text">
+                <h1>VOLT CARD STUDIO</h1>
+                <span>أستوديو التحكم المباشر وتعديل قوالب ميديا ڤولت</span>
+            </div>
+        </div>
+
+        <div class="topbar-actions">
+            <div class="preset-quick">
+                <label>النموذج النشط:</label>
+                <select id="quickPresetSelect">
+                    <option value="kora_breaking">كورة ڤولت — العاجل (1350×1688)</option>
+                    <option value="kora_manchette">كورة ڤولت — المانشيت الطولي (2160×2700)</option>
+                    <option value="fantasy_stats">فانتازي ڤولت — إحصائيات xG (1350×1688)</option>
+                    <option value="custom">قالب مخصص / حر</option>
+                </select>
+            </div>
+
+            <button class="btn btn-secondary" id="btnLiveNewsModal">📰 جلب أخبار حية</button>
+            <button class="btn btn-secondary" id="btnSavePreset">💾 حفظ كقالب رسمي</button>
+            <button class="btn btn-primary" id="btnExportHd">📥 تنزيل عالي الجودة</button>
+            <button class="btn btn-accent" id="btnPublishModal">🚀 نشر مباشر لفيسبوك</button>
+        </div>
+    </header>
+
+    <!-- MAIN APP LAYOUT -->
+    <div class="main-container">
+        <!-- LEFT CONTROL PANEL -->
+        <aside class="sidebar-controls">
+            <!-- TABS -->
+            <div class="tabs-nav">
+                <button class="tab-btn active" data-tab="tab-text">✍️ الخطوط</button>
+                <button class="tab-btn" data-tab="tab-bg">🖼️ الخلفية</button>
+                <button class="tab-btn" data-tab="tab-vector">👤 اللاعب</button>
+                <button class="tab-btn" data-tab="tab-template">🎨 القالب</button>
+            </div>
+
+            <div class="tab-content active" id="tab-text">
+                <!-- TEXT CONTROLS -->
+                <div class="control-group">
+                    <div class="group-title">
+                        <span>نص الخبر / المانشيت</span>
+                        <button class="mini-btn" id="btnPasteSampleNews">تعبئة نموذج</button>
+                    </div>
+                    <textarea id="textHeadline" rows="3" placeholder="اكتب العنوان أو التصريح هنا..."></textarea>
+                </div>
+
+                <div class="control-group">
+                    <div class="group-title">إعدادات الخط (Typography)</div>
+                    <div class="row">
+                        <div class="col">
+                            <label>نوع الخط:</label>
+                            <select id="fontFamily">
+                                <option value="AraJozoor" selected>خط جذور المعتمد (Jozor)</option>
+                                <option value="Cairo">خط كايرو (Cairo)</option>
+                                <option value="Tajawal">خط تجوال (Tajawal)</option>
+                                <option value="Arial">Arial Black</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label>محاذاة النص:</label>
+                            <select id="textAlign">
+                                <option value="center">منتصف (Center)</option>
+                                <option value="right" selected>يمين (Right)</option>
+                                <option value="left">يسار (Left)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="slider-row">
+                        <label>حجم الخط: <span id="valFontSize">78px</span></label>
+                        <input type="range" id="fontSize" min="30" max="150" value="78">
+                    </div>
+
+                    <div class="slider-row">
+                        <label>تباعد الأسطر: <span id="valLineHeight">1.25</span></label>
+                        <input type="range" id="lineHeight" min="0.8" max="2.0" step="0.05" value="1.25">
+                    </div>
+
+                    <div class="slider-row">
+                        <label>الموقع الرأسي (Y): <span id="valPosY">1160px</span></label>
+                        <input type="range" id="posY" min="100" max="2500" value="1160">
+                    </div>
+
+                    <div class="slider-row">
+                        <label>الموقع الأفقي (X): <span id="valPosX">675px</span></label>
+                        <input type="range" id="posX" min="50" max="2100" value="675">
+                    </div>
+
+                    <div class="slider-row">
+                        <label>أقصى عرض للكتلة: <span id="valTextWidth">1150px</span></label>
+                        <input type="range" id="textWidth" min="400" max="2100" value="1150">
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <label>لون النص:</label>
+                            <input type="color" id="textColor" value="#ffffff">
+                        </div>
+                        <div class="col">
+                            <label>تحديد الحواف (Stroke):</label>
+                            <input type="color" id="strokeColor" value="#000000">
+                        </div>
+                        <div class="col">
+                            <label>سمك التحديد:</label>
+                            <input type="number" id="strokeWidth" min="0" max="20" value="4">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SOURCE & SPEAKER -->
+                <div class="control-group">
+                    <div class="group-title">المتحدث / المصدر (الأسفل)</div>
+                    <div class="row">
+                        <div class="col">
+                            <label>صفة المتحدث:</label>
+                            <input type="text" id="sourceRole" value="الصحفي" placeholder="الصحفي / المدرب...">
+                        </div>
+                        <div class="col">
+                            <label>لون الصفة:</label>
+                            <input type="color" id="sourceRoleColor" value="#00b4d8">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <label>اسم المصدر / المتحدث:</label>
+                            <input type="text" id="sourceName" value="فابريزيو رومانو" placeholder="اسم المصدر...">
+                        </div>
+                        <div class="col">
+                            <label>لون الاسم:</label>
+                            <input type="color" id="sourceNameColor" value="#ffffff">
+                        </div>
+                    </div>
+
+                    <div class="slider-row">
+                        <label>الموقع الرأسي للمصدر (Y): <span id="valSourceY">1530px</span></label>
+                        <input type="range" id="sourceY" min="300" max="2650" value="1530">
+                    </div>
+                    <div class="slider-row">
+                        <label>الموقع الأفقي للمصدر (X): <span id="valSourceX">675px</span></label>
+                        <input type="range" id="sourceX" min="50" max="2100" value="675">
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: BACKGROUND -->
+            <div class="tab-content" id="tab-bg">
+                <div class="control-group">
+                    <div class="group-title">صورة الخلفية الأصلية</div>
+                    <div class="btn-grid">
+                        <button class="btn btn-outline" id="btnUploadBg">📁 رفع صورة من جهازك</button>
+                        <input type="file" id="fileBgInput" accept="image/*" style="display:none;">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="group-title">✨ توليد خلفية AI بـ FLUX</div>
+                    <input type="text" id="promptAiBg" placeholder="football stadium under dark dramatic lights, 4k" value="football stadium pitch under dark dramatic lights, cinematic 4k sports background">
+                    <button class="btn btn-ai" id="btnGenerateAiBg">🚀 توليد فوري مجاني (2 ثانية)</button>
+                </div>
+
+                <div class="control-group">
+                    <div class="group-title">معرض الصور الجاهزة</div>
+                    <div class="gallery-grid" id="bgGallery"></div>
+                </div>
+
+                <div class="control-group">
+                    <div class="group-title">التحكم في أبعاد وموقع الصورة</div>
+                    <div class="slider-row">
+                        <label>التكبير (Scale): <span id="valBgScale">100%</span></label>
+                        <input type="range" id="bgScale" min="50" max="250" value="100">
+                    </div>
+                    <div class="slider-row">
+                        <label>تحريك أفقي (Pan X): <span id="valBgPanX">0px</span></label>
+                        <input type="range" id="bgPanX" min="-1000" max="1000" value="0">
+                    </div>
+                    <div class="slider-row">
+                        <label>تحريك رأسي (Pan Y): <span id="valBgPanY">0px</span></label>
+                        <input type="range" id="bgPanY" min="-1000" max="1000" value="0">
+                    </div>
+                    <div class="slider-row">
+                        <label>السطوع (Brightness): <span id="valBgBrightness">100%</span></label>
+                        <input type="range" id="bgBrightness" min="20" max="180" value="100">
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: VECTOR / PLAYER CUTOUT -->
+            <div class="tab-content" id="tab-vector">
+                <div class="control-group">
+                    <div class="group-title">
+                        <span>طبقة اللاعب المفرغة (Cutout)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="chkShowVector" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="btn-grid">
+                        <button class="btn btn-outline" id="btnUploadCutout">📁 رفع لاعب مفرغ</button>
+                        <input type="file" id="fileCutoutInput" accept="image/*" style="display:none;">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="group-title">✨ توليد لاعب فيكتور + عزل فوري</div>
+                    <input type="text" id="aiPlayerName" placeholder="اسم اللاعب (Mohamed Salah)" value="Mohamed Salah">
+                    <input type="text" id="aiPlayerClub" placeholder="النادي (Liverpool)" value="Liverpool">
+                    <button class="btn btn-ai" id="btnGenerateVectorAi">⚡ توليد فيكتور وعزل بـ Rembg</button>
+                </div>
+
+                <div class="control-group">
+                    <div class="group-title">معرض نجوم مفرغة جاهزة</div>
+                    <div class="cutout-grid" id="cutoutGallery"></div>
+                </div>
+
+                <div class="control-group">
+                    <div class="group-title">موقع وحجم اللاعب</div>
+                    <div class="slider-row">
+                        <label>الموقع الأفقي (X): <span id="valVecX">300px</span></label>
+                        <input type="range" id="vecX" min="-500" max="2100" value="300">
+                    </div>
+                    <div class="slider-row">
+                        <label>الموقع الرأسي (Y): <span id="valVecY">500px</span></label>
+                        <input type="range" id="vecY" min="-200" max="2500" value="500">
+                    </div>
+                    <div class="slider-row">
+                        <label>الحجم (Scale): <span id="valVecScale">100%</span></label>
+                        <input type="range" id="vecScale" min="20" max="300" value="100">
+                    </div>
+                    <div class="row">
+                        <label><input type="checkbox" id="chkVecFlip"> عكس أفقي (Flip)</label>
+                        <label><input type="checkbox" id="chkVecShadow" checked> ظل أسود (Drop Shadow)</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: TEMPLATE -->
+            <div class="tab-content" id="tab-template">
+                <div class="control-group">
+                    <div class="group-title">القالب المظلل واللوجو</div>
+                    <select id="selectTemplateOverlay">
+                        <option value="/assets/templates/kora_volt/breaking.png">كورة ڤولت — العاجل (1350×1688)</option>
+                        <option value="/assets/templates/kora_volt/manchette.png">كورة ڤولت — المانشيت الطولي (2160×2700)</option>
+                        <option value="">بدون قالب (صورة حرة)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <div class="group-title">➕ رفع قالب شفاف جديد (PNG)</div>
+                    <p class="hint">ارفع صورة القالب المظلل الذي صممته على كانفا أو فوتوشوب وسيقوم الاستوديو بحفظه فورًا.</p>
+                    <button class="btn btn-accent" id="btnUploadTemplateOverlay">📁 رفع ملف القالب (PNG)</button>
+                    <input type="file" id="fileTemplateInput" accept="image/png" style="display:none;">
+                </div>
+
+                <div class="control-group">
+                    <div class="group-title">شفافية وتأثير القالب</div>
+                    <div class="slider-row">
+                        <label>الشفافية (Opacity): <span id="valTmplOpacity">100%</span></label>
+                        <input type="range" id="tmplOpacity" min="0" max="100" value="100">
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER WORKSPACE -->
+        <main class="workspace">
+            <div class="workspace-toolbar">
+                <div class="zoom-controls">
+                    <button class="tool-btn" id="btnZoomOut">🔍 -</button>
+                    <span id="zoomLevel">Fit</span>
+                    <button class="tool-btn" id="btnZoomIn">🔍 +</button>
+                    <button class="tool-btn" id="btnZoomFit">احتواء الشاشة</button>
+                </div>
+
+                <div class="view-toggles">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="chkRefOverlay"> مقارنة بالمرجع الأصلي
+                    </label>
+                    <input type="range" id="refOpacity" min="0" max="100" value="50" style="width: 80px; display:none;">
+                </div>
+            </div>
+
+            <div class="canvas-viewport" id="canvasViewport">
+                <div class="canvas-wrapper" id="canvasWrapper">
+                    <canvas id="cardCanvas"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: LIVE NEWS SELECTOR -->
+    <div class="modal" id="modalLiveNews">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>📰 اختيار خبر حقيقي لتجربة القالب</h3>
+                <button class="close-btn" id="btnCloseNewsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-subtitle">اختر أي خبر حقيقي من الخلاصات الحية لملء العنوان والصورة فورًا:</p>
+                <div class="news-list" id="liveNewsList">
+                    <div class="loading">جاري جلب الأخبار الحية...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: FACEBOOK PUBLISH -->
+    <div class="modal" id="modalPublish">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>🚀 نشر مباشر على الصفحة</h3>
+                <button class="close-btn" id="btnClosePublishModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label>اختر الصفحة المستهدفة:</label>
+                <select id="pubTargetPage">
+                    <option value="kora_volt">كورة ڤولت (Kora Volt)</option>
+                    <option value="fantasy_volt">فانتازي ڤولت (Fantasy Volt)</option>
+                </select>
+
+                <label>نص المنشور (الكابشن):</label>
+                <textarea id="pubCaption" rows="4" placeholder="اكتب وصف المنشور والهاشتاجات..."></textarea>
+
+                <div class="preview-mini">
+                    <img id="pubPreviewImg" src="" alt="Card Preview">
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="btnCancelPublish">إلغاء</button>
+                    <button class="btn btn-accent" id="btnConfirmPublish">تأكيد ونشر الآن</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/studio.js"></script>
+</body>
+</html>
