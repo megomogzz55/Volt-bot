@@ -281,6 +281,46 @@ body {{
     raise RuntimeError("Failed to render card with Headless Browser")
 
 
+def _prepare_statement_player_photo(photo_path: str, target_width: int = 1200, target_height: int = 2550) -> str:
+    """
+    Intelligently frames any photo (landscape or portrait) for Template #2:
+    - Sets clean red sports background #ca2424.
+    - Positions player torso & head naturally without over-zooming or cropping the head.
+    """
+    img = Image.open(photo_path).convert("RGBA")
+    w, h = img.size
+    
+    # Create canvas with official red background
+    canvas = Image.new("RGBA", (target_width, target_height), (202, 36, 36, 255))
+    aspect = w / h
+    resample = Image.Resampling.LANCZOS
+    
+    if aspect > 1.2:  # Landscape photo (e.g. 16:9 news photo)
+        # Scale photo so height is around 1700-1800px to keep head in upper half
+        scale = 1750 / h
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        resized = img.resize((new_w, new_h), resample)
+        
+        # Center horizontally and position head at y ≈ 400
+        x_offset = (target_width - new_w) // 2
+        y_offset = 350
+        canvas.paste(resized, (x_offset, y_offset), resized if resized.mode == 'RGBA' else None)
+    else:  # Portrait / Cutout
+        scale = min(target_width / w, target_height / h) * 0.95
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        resized = img.resize((new_w, new_h), resample)
+        
+        x_offset = (target_width - new_w) // 2
+        y_offset = target_height - new_h
+        canvas.paste(resized, (x_offset, y_offset), resized if resized.mode == 'RGBA' else None)
+        
+    temp_prepared = os.path.join(OUTPUT_DIR, "_tmp_statement_player.png")
+    canvas.save(temp_prepared, "PNG")
+    return temp_prepared
+
+
 def render_statement_card(
     photo_path: str,
     statement_text: str,
@@ -291,22 +331,11 @@ def render_statement_card(
 ) -> str:
     """
     Renders Template #2 (Manchettes, Statements, Quotes & Interviews):
-    - Photo on the left under template (width: 1400px, 2160x2700 HD).
+    - Photo on the left under template (properly framed, red #ca2424 background, 2160x2700 HD).
     - Shaded horizontal gradient to black on the right.
     - KORA VOLT logo at top right.
     - Headline / statement in Jozor bold white font in the right column.
     - Speaker role (in electric blue) above Speaker name (in white) at bottom right.
-    
-    Args:
-        photo_path: Path to the article/player photo.
-        statement_text: Detailed statement / quote / manchette text in Arabic.
-        source_role: The role (e.g. 'الصحفي', 'اللاعب', 'المدرب', 'نادي') in electric blue.
-        source_name: The name (e.g. 'فابريزيو رومانو', 'واين روني') in white.
-        output_filename: Filename for output PNG.
-        photo_focus: CSS background-position for photo framing (default 'center 20%').
-        
-    Returns:
-        Absolute path to rendered 2160x2700 PNG image.
     """
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
@@ -316,6 +345,9 @@ def render_statement_card(
     if not os.path.exists(photo_path):
         raise FileNotFoundError(f"Photo not found at: {photo_path}")
         
+    # Prepare player framing on red background
+    prepared_photo = _prepare_statement_player_photo(photo_path)
+    
     with open(tmpl_file, "rb") as f:
         tmpl_b64 = base64.b64encode(f.read()).decode()
         
@@ -324,9 +356,7 @@ def render_statement_card(
         with open(FONT_PATH, "rb") as f:
             font_b64 = base64.b64encode(f.read()).decode()
             
-    ext = os.path.splitext(photo_path)[1].lower()
-    mime = "image/png" if ext == ".png" else "image/jpeg"
-    with open(photo_path, "rb") as f:
+    with open(prepared_photo, "rb") as f:
         photo_b64 = base64.b64encode(f.read()).decode()
         
     html = f"""<!DOCTYPE html>
@@ -345,20 +375,22 @@ body {{
   width: 2160px; height: 2700px;
   font-family: 'Jozor', sans-serif;
   overflow: hidden; position: relative;
-  background: #000;
+  background: #ca2424;
 }}
 
-/* 1. PHOTO ON THE LEFT UNDER TEMPLATE */
-.photo-layer {{
+/* 1. PLAYER POSITIONED ON THE LEFT (Matching Reference Exactly) */
+.player-layer {{
   position: absolute;
-  top: 0; left: 0; bottom: 0;
-  width: 1400px;
-  background: url(data:{mime};base64,{photo_b64}) no-repeat {photo_focus};
-  background-size: cover;
+  top: 150px;
+  left: 0;
+  width: 1200px;
+  height: 2550px;
+  background: url(data:image/png;base64,{photo_b64}) no-repeat center bottom;
+  background-size: contain;
   z-index: 1;
 }}
 
-/* 2. SHADED HORIZONTAL TEMPLATE OVERLAY (Logo + Gradient) */
+/* 2. SHADED HORIZONTAL TEMPLATE OVERLAY */
 .template-overlay {{
   position: absolute; inset: 0;
   background: url(data:image/png;base64,{tmpl_b64}) center/cover;
@@ -369,8 +401,8 @@ body {{
 /* 3. HEADLINE COLUMN ON THE RIGHT */
 .content-col {{
   position: absolute;
-  left: 1160px; right: 100px;
-  top: 820px; bottom: 120px;
+  left: 1140px; right: 90px;
+  top: 800px; bottom: 120px;
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -395,7 +427,7 @@ body {{
   line-height: 1.55;
   -webkit-text-stroke: 1.2px #ffffff;
   text-shadow: 0 4px 20px rgba(0,0,0,0.95);
-  max-width: 860px;
+  max-width: 880px;
 }}
 
 /* 4. SPEAKER AT THE BOTTOM OF THE COLUMN */
@@ -404,7 +436,7 @@ body {{
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 20px;
+  padding-bottom: 25px;
 }}
 
 .speaker-role {{
@@ -427,7 +459,7 @@ body {{
 </style>
 </head>
 <body>
-  <div class="photo-layer"></div>
+  <div class="player-layer"></div>
   <div class="template-overlay"></div>
   
   <div class="content-col">
